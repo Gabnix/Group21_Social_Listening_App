@@ -1,0 +1,103 @@
+.post-item {
+  display: flex;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.post-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.post-thumbnail {
+  margin-right: 1.5rem;
+  flex-shrink: 0;
+}
+
+.post-thumbnail img {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.post-content {
+  flex: 1;
+}
+
+.post-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.post-title a {
+  color: #1a1a1b;
+  transition: color 0.2s;
+}
+
+.post-title a:hover {
+  color: #0079d3;
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #787c7e;
+}
+
+.post-subreddit {
+  color: #0079d3;
+  font-weight: 600;
+}
+
+.post-text {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.post-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.post-score, .post-comments {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #787c7e;
+}
+
+.post-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .post-item {
+    flex-direction: column;
+  }
+  
+  .post-thumbnail {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .post-thumbnail img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+  }
+} 
