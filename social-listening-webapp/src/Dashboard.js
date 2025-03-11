@@ -1,4 +1,4 @@
-// Dashboard.js
+// Dashboard.js - Fixing the Top Influencer navigation
 import React, { useState } from 'react';
 import { TrendLineChart, DiseasePieChart } from './DashboardCharts';
 import { 
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import './Dashboard.css';
 
-// Sample data for the dashboard
+// Sample data for the dashboard (unchanged)
 const keywordsData = [
   { id: 1, name: 'Diseases #1', trend: '+15.6%', status: 'up' },
   { id: 2, name: 'Diseases #2', trend: '+14%', status: 'up' },
@@ -78,11 +78,15 @@ const Dashboard = ({ navigateTo }) => {
               <Briefcase size={20} />
               <span>Custom View</span>
             </div>
-            <div className="sidebar-subitem">
-              <span>• Top Theme</span>
+            <div 
+              className="sidebar-subitem"
+              onClick={() => navigateTo('influencers')} 
+              style={{ cursor: 'pointer' }}
+            >
+              <span>• Top Influencer</span>
             </div>
             <div className="sidebar-subitem">
-              <span>• Top Influencer</span>
+              <span>• Top Theme</span>
             </div>
             <div className="sidebar-subitem">
               <span>• Most Engagement</span>
@@ -307,7 +311,7 @@ const Dashboard = ({ navigateTo }) => {
             
             <div className="chart-content">
               <div className="pie-chart-container">
-                <div className="pie-chart-placeholder">
+                <div className="disease-stat-container">
                   <div className="pie-stat">
                     <span className="pie-value">6.5k</span>
                     <span className="pie-label">matches</span>

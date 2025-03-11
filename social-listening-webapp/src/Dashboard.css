@@ -444,11 +444,30 @@
   
   /* Pie Chart */
   .pie-chart-container {
+    position: relative;
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    height: 200px;
   }
   
+  /* New class for dashboard top diseases stat display */
+  .disease-stat-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 50%;
+  }
+  
+  /* This class is still needed for other elements */
   .pie-chart-placeholder {
     width: 150px;
     height: 150px;
