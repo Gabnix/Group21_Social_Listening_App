@@ -1,21 +1,20 @@
 from flask import Flask, request, jsonify
 import spacy
 from werkzeug.exceptions import BadRequest
+from SpaCy.combined_analyzer import CombinedAnalyzer
 
 app = Flask(__name__)
 
-# Load the spaCy model
-# You can change this to other models like 'en_core_web_lg' for more features
-try:
-    nlp = spacy.load('en_core_web_sm')
-except OSError:
-    print("Model not found. Please download it with: python -m spacy download en_core_web_sm")
-    exit(1)
+# Initialize the CombinedAnalyzer
+analyzer = CombinedAnalyzer()
 
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint."""
-    return jsonify({"status": "healthy", "model": nlp.meta['name']})
+    return jsonify({
+        "status": "healthy",
+        "model": analyzer.nlp.meta['name']
+    })
 
 @app.route('/analyze', methods=['POST'])
 def analyze_text():
@@ -30,65 +29,37 @@ def analyze_text():
     
     text = data['text']
     
-    # Process the text with spaCy
-    doc = nlp(text)
+    # Use CombinedAnalyzer to process the text
+    preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
+    
+    # Convert spaCy tokens to serializable format
+    processed_tokens = [
+        {
+            "text": token.text,
+            "lemma": token.lemma_,
+            "pos": token.pos_,
+            "tag": token.tag_,
+            "dep": token.dep_
+        } for token in preprocessing_results['processed_tokens']
+    ]
     
     # Prepare the response
     result = {
-        "tokens": [
-            {
-                "text": token.text,
-                "lemma": token.lemma_,
-                "pos": token.pos_,
-                "tag": token.tag_,
-                "dep": token.dep_,
-                "is_stop": token.is_stop,
-                "is_punct": token.is_punct
-            } for token in doc
-        ],
-        "entities": [
-            {
-                "text": ent.text,
-                "start_char": ent.start_char,
-                "end_char": ent.end_char,
-                "label": ent.label_
-            } for ent in doc.ents
-        ],
-        "sentences": [str(sent) for sent in doc.sents]
+        "preprocessing": {
+            "original_count": preprocessing_results['original_count'],
+            "processed_count": preprocessing_results['processed_count'],
+            "processed_text": preprocessing_results['processed_text'],
+            "processed_tokens": processed_tokens
+        },
+        "classification": classification_results,
+        "dependencies": dependency_results
     }
     
     return jsonify(result)
 
-@app.route('/similarity', methods=['POST'])
-def compare_texts():
-    """Compare similarity between two texts."""
-    if not request.is_json:
-        raise BadRequest("Content-Type must be application/json")
-    
-    data = request.get_json()
-    
-    if 'text1' not in data or 'text2' not in data:
-        return jsonify({"error": "Both text1 and text2 are required"}), 400
-    
-    text1 = data['text1']
-    text2 = data['text2']
-    
-    # Process both texts
-    doc1 = nlp(text1)
-    doc2 = nlp(text2)
-    
-    # Calculate similarity
-    similarity = doc1.similarity(doc2)
-    
-    return jsonify({
-        "text1": text1,
-        "text2": text2,
-        "similarity": similarity
-    })
-
-@app.route('/extract-keywords', methods=['POST'])
-def extract_keywords():
-    """Extract keywords from text based on POS tags."""
+@app.route('/preprocess', methods=['POST'])
+def preprocess_text():
+    """Preprocess text using CombinedAnalyzer."""
     if not request.is_json:
         raise BadRequest("Content-Type must be application/json")
     
@@ -98,17 +69,73 @@ def extract_keywords():
         return jsonify({"error": "No text provided"}), 400
     
     text = data['text']
+    preprocessing_results = analyzer.preprocess_text(text)
     
-    # Process the text
-    doc = nlp(text)
-    
-    # Extract nouns and proper nouns as keywords
-    keywords = [token.text for token in doc if token.pos_ in ('NOUN', 'PROPN') and not token.is_stop]
+    # Convert spaCy tokens to serializable format
+    processed_tokens = [
+        {
+            "text": token.text,
+            "lemma": token.lemma_,
+            "pos": token.pos_
+        } for token in preprocessing_results['processed_tokens']
+    ]
     
     return jsonify({
-        "text": text,
-        "keywords": keywords
+        "original_count": preprocessing_results['original_count'],
+        "processed_count": preprocessing_results['processed_count'],
+        "processed_text": preprocessing_results['processed_text'],
+        "processed_tokens": processed_tokens
     })
+
+@app.route('/dependencies', methods=['POST'])
+def analyze_dependencies():
+    """Analyze dependencies in text using CombinedAnalyzer."""
+    if not request.is_json:
+        raise BadRequest("Content-Type must be application/json")
+    
+    data = request.get_json()
+    
+    if 'text' not in data:
+        return jsonify({"error": "No text provided"}), 400
+    
+    text = data['text']
+    dependencies = analyzer.analyze_dependencies(text)
+    
+    return jsonify({"dependencies": dependencies})
+
+@app.route('/train', methods=['POST'])
+def train_classifier():
+    """Train the text classifier with provided data."""
+    if not request.is_json:
+        raise BadRequest("Content-Type must be application/json")
+    
+    data = request.get_json()
+    
+    if 'training_data' not in data:
+        return jsonify({"error": "No training data provided"}), 400
+    
+    try:
+        training_data = analyzer.prepare_training_data(data['training_data'])
+        analyzer.train_classifier(training_data, n_iter=data.get('n_iter', 20))
+        return jsonify({"message": "Classifier trained successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/classify', methods=['POST'])
+def classify_text():
+    """Classify text using the trained classifier."""
+    if not request.is_json:
+        raise BadRequest("Content-Type must be application/json")
+    
+    data = request.get_json()
+    
+    if 'text' not in data:
+        return jsonify({"error": "No text provided"}), 400
+    
+    text = data['text']
+    classification = analyzer.classify_text(text)
+    
+    return jsonify({"classification": classification})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
