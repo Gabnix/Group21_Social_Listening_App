@@ -1,11 +1,20 @@
 // App.js
-import React from 'react';
+import React, { useState } from 'react';
 import Dashboard from './Dashboard';
+import AdvancedSearch from './AdvancedSearch';
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
+  // Function to switch between pages
+  const navigateTo = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="App">
-      <Dashboard />
+      {currentPage === 'dashboard' && <Dashboard navigateTo={navigateTo} />}
+      {currentPage === 'advancedSearch' && <AdvancedSearch navigateTo={navigateTo} />}
     </div>
   );
 }

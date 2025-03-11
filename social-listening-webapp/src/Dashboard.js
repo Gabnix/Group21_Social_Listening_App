@@ -47,7 +47,7 @@ const topDiseasesData = [
 ];
 
 // Main Dashboard Component
-const Dashboard = () => {
+const Dashboard = ({ navigateTo }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState('Last 14 Days');
   
@@ -135,7 +135,11 @@ const Dashboard = () => {
           <div className="nav-actions">
             <div className="search-bar">
               <Search size={20} />
-              <input type="text" placeholder="Type '/' to search" />
+              <input 
+                type="text" 
+                placeholder="Type '/' to search" 
+                onClick={() => navigateTo('advancedSearch')}
+              />
             </div>
             
             <div className="notification-icon">
