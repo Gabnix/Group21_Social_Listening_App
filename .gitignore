@@ -20,3 +20,6 @@ build/
 # Package-lock and yarn.lock (optional)
 package-lock.json
 yarn.lock
+
+# .env
+.env
