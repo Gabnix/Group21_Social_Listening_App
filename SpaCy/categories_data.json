@@ -1,0 +1,79 @@
+{
+    "barley": [
+        "Spring barley is commonly used in beer production.",
+        "Barley prefers cool growing conditions for optimal yield.",
+        "Two-row barley has larger kernels than six-row varieties.",
+        "Winter barley provides good ground cover to prevent erosion.",
+        "Malting barley requires specific protein content levels."
+    ],
+    "wheat": [
+        "Hard red winter wheat is ideal for bread flour.",
+        "Wheat heads bend over when ready for harvest.",
+        "Spring wheat is planted as soon as soil can be worked.",
+        "Wheat requires about 12 inches annual rainfall minimum.",
+        "Test weight indicates wheat grain quality at harvest."
+    ],
+    "canola": [
+        "Canola flowers are bright yellow when in full bloom.",
+        "Straight-cut harvesting requires proper timing.",
+        "Canola pods shatter easily when too dry.",
+        "Early seeding helps canola avoid heat stress.",
+        "Canola needs good soil drainage to prevent root rot."
+    ],
+    "corn": [
+        "Corn requires 120 frost-free days to mature.",
+        "Kernel milk line indicates corn maturity.",
+        "Plant population affects corn ear size.",
+        "Corn silking occurs about 65 days after emergence.",
+        "Side-dress nitrogen when corn is knee-high."
+    ],
+    "cotton": [
+        "Cotton requires long, hot growing seasons.",
+        "First cotton squares appear about 35 days after planting.",
+        "Cotton bolls take 50-60 days to mature.",
+        "Defoliation helps synchronize cotton boll opening.",
+        "Cotton lint quality affects market value."
+    ],
+    "oats": [
+        "Oats tolerate acidic soils better than other cereals.",
+        "Crown rust is a major threat to oat production.",
+        "Oats make excellent companion crops.",
+        "Hull-less oats require gentle combining.",
+        "Oat lodging reduces grain quality."
+    ],
+    "rice": [
+        "Rice needs consistent flooding for weed control.",
+        "Rice grain moisture should be 18-22% at harvest.",
+        "Straighthead can be prevented by draining fields.",
+        "Rice ratoon crop provides additional yield.",
+        "Rice levees control water depth in paddies."
+    ],
+    "disease": [
+        "Plant diseases reduce global crop yields significantly.",
+        "Disease triangle includes pathogen, host, and environment.",
+        "Cultural practices help prevent disease spread.",
+        "Disease resistance breaks down over time.",
+        "Seed treatment prevents seedling diseases."
+    ],
+    "rust": [
+        "Rust pustules release orange spores when touched.",
+        "Stripe rust prefers cool, moist conditions.",
+        "Leaf rust reduces photosynthetic area.",
+        "Stem rust can cause complete crop failure.",
+        "Rust races evolve to overcome resistance."
+    ],
+    "mildew": [
+        "Powdery mildew appears as white, dusty patches.",
+        "High humidity promotes mildew development.",
+        "Young leaves are most susceptible to mildew.",
+        "Air circulation reduces mildew pressure.",
+        "Mildew overwinters on plant debris."
+    ],
+    "smut": [
+        "Corn smut forms galls on ears and tassels.",
+        "Loose smut replaces grain with black spores.",
+        "Hot water treatment controls seed-borne smut.",
+        "Smut spores survive in soil for years.",
+        "Some cultures consider corn smut a delicacy."
+    ]
+}

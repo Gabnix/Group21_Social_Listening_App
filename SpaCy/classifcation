@@ -1,0 +1,46 @@
+# Import required libraries
+import spacy  # Main spaCy library for NLP tasks
+import json   # For reading JSON files
+from spacy.training.example import Example  # For creating training examples
+
+# Load training data from JSON file
+with open('output.json', 'r') as f:
+    data = json.load(f)
+    # Convert JSON data into format required by spaCy
+    # Each item becomes a tuple of (text, {"cats": categories})
+    train_data = [(item['text'], {"cats": item['cats']}) for item in data['train_data']]
+
+# Initialize a blank English language model
+nlp = spacy.blank("en")
+
+# Add text classification pipeline to the model
+textcat = nlp.add_pipe("textcat")
+
+# Define the classification labels
+textcat.add_label("POSITIVE")
+textcat.add_label("NEGATIVE")
+
+# Initialize the training optimizer
+optimizer = nlp.begin_training()
+
+# Training loop - run for 10 iterations
+for i in range(10):
+    losses = {}  # Dictionary to store training losses
+    
+    # Iterate through each training example
+    for text, annotations in train_data:
+        # Create a document object from the text
+        doc = nlp.make_doc(text)
+        # Create a training example from the document and its annotations
+        example = Example.from_dict(doc, annotations)
+        # Update the model with the example
+        # losses dictionary will be updated with the current loss values
+        nlp.update([example], losses=losses, sgd=optimizer)
+    print(losses)  # Print the losses for this iteration
+
+# Test the trained classifier with a new sentence
+doc = nlp("Wheat is an important source of vital nutrients, yet some people are allergic to it. @ISTAseedtesting is reading the project between @CSIRO and @EdithCowanUni on the promising step for sufferers of wheat sensitivity. Learn more: https://t.co/bB9v3706Qz #seedquality #seedtesting https://t.co/yW6prpbts4")
+
+# Print the classification results
+# This will show the probability scores for POSITIVE and NEGATIVE categories
+print(doc.cats)

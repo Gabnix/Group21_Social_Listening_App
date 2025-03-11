@@ -1,0 +1,42 @@
+import spacy
+from spacy.training.example import Example
+import random
+
+# Create a blank English NLP model
+nlp = spacy.blank("en")
+
+# Add a Named Entity Recognition (NER) pipeline component to the model
+ner = nlp.add_pipe("ner")
+
+# Add labels for entity recognition
+ner.add_label("ORG")  # Organization names
+ner.add_label("PRODUCT")  # Product names
+
+# Training data containing text and corresponding entity annotations
+TRAIN_DATA = [
+    ("Apple is looking at buying U.K. startup for $1 billion", {"entities": [(0, 5, "ORG"), (27, 31, "GPE"), (33, 40, "PRODUCT")]}),
+]
+
+# Initialize the optimizer for training the model
+optimizer = nlp.begin_training()
+
+# Train the model for 20 iterations
+def train_model():
+    for i in range(20):
+        random.shuffle(TRAIN_DATA)  # Shuffle training data for each iteration
+        losses = {}  # Dictionary to store loss values
+        
+        for text, annotations in TRAIN_DATA:
+            doc = nlp.make_doc(text)  # Convert text to a spaCy Doc object
+            example = Example.from_dict(doc, annotations)  # Create an Example object with annotations
+            
+            # Update the model using the example and optimizer
+            nlp.update([example], losses=losses, drop=0.35, sgd=optimizer)
+        
+        print(losses)  # Print loss after each iteration
+
+# Train the NER model
+train_model()
+
+# Save the trained model to disk
+nlp.to_disk("custom_ner_model")
