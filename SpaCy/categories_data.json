@@ -75,5 +75,383 @@
         "Hot water treatment controls seed-borne smut.",
         "Smut spores survive in soil for years.",
         "Some cultures consider corn smut a delicacy."
+    ],
+    "chickpea": [
+        "Chickpea nodulation indicates good nitrogen fixation.",
+        "Desi chickpeas have smaller, darker seeds than kabuli.",
+        "Chickpea flowering occurs 30-40 days after emergence.",
+        "Winter chickpeas require specific cold tolerance.",
+        "Pod set depends on favorable temperature conditions."
+    ],
+    "faba_bean": [
+        "Faba beans are excellent nitrogen fixers.",
+        "Tannin-free varieties have white flowers.",
+        "Faba beans prefer cool, moist growing conditions.",
+        "Early planting maximizes faba bean yield potential.",
+        "Faba bean seeds require adequate soil moisture to germinate."
+    ],
+    "lupins": [
+        "Narrow-leaf lupins dominate Australian production.",
+        "Lupin alkaloid levels affect grain marketability.",
+        "Blue lupins tolerate more acidic soils.",
+        "Lupin pods mature from bottom to top.",
+        "Lupins require specific rhizobia for nodulation."
+    ],
+    "lentils": [
+        "Red lentils are most commonly grown type.",
+        "Lentil plants are short with many branches.",
+        "Uniform ripening is crucial for lentil harvest.",
+        "Lentils fix nitrogen in partnership with rhizobia.",
+        "Short growing season suits lentil production."
+    ],
+    "mungbean": [
+        "Mungbean sprouts are valuable food products.",
+        "Summer growing conditions suit mungbean best.",
+        "Mungbean crops mature in 90-110 days.",
+        "Pod ripening occurs from bottom to top.",
+        "Mungbean requires warm soil for germination."
+    ],
+    "safflower": [
+        "Safflower has deep roots for drought tolerance.",
+        "Oil content determines safflower crop value.",
+        "Safflower heads mature from outside inward.",
+        "Late season moisture reduces oil quality.",
+        "Safflower spines protect against bird damage."
+    ],
+    "sorghum": [
+        "Sorghum tolerates high temperatures well.",
+        "Head size determines sorghum yield potential.",
+        "Grain sorghum needs less water than corn.",
+        "Sorghum tillering depends on plant population.",
+        "Bird damage affects sorghum grain quality."
+    ],
+    "soybean": [
+        "Soybean maturity groups guide planting dates.",
+        "Pod fill stage determines final yield.",
+        "Determinate varieties stop growing at flowering.",
+        "Soybean cyst nematode limits production.",
+        "Double-crop soybeans follow winter wheat."
+    ],
+    "blackleg": [
+        "Blackleg lesions start as pale spots with black dots.",
+        "Stem cankers weaken plants causing lodging.",
+        "Infected stubble spreads blackleg spores.",
+        "Early infection causes more severe yield loss.",
+        "Resistant varieties reduce blackleg pressure."
+    ],
+    "powdery_mildew": [
+        "Powdery mildew thrives in humid, moderate temperatures.",
+        "White powdery patches spread across leaf surfaces.",
+        "Disease development slows in hot, wet weather.",
+        "Lower leaves show symptoms first.",
+        "Air circulation reduces disease severity."
+    ],
+    "rhizoctonia": [
+        "Rhizoctonia causes reddish-brown lesions on roots.",
+        "Seedling death creates patchy crop stands.",
+        "Warm, moist soil favors disease development.",
+        "Crop rotation reduces inoculum levels.",
+        "Seed treatments protect early growth stages."
+    ],
+    "sclerotinia": [
+        "Sclerotinia causes bleached stem lesions.",
+        "Black sclerotia survive multiple seasons.",
+        "Dense canopy promotes disease spread.",
+        "Petal fall spreads spores to stems.",
+        "Wet flowering period increases infection risk."
+    ],
+    "white_leaf_spot": [
+        "White leaf spots have distinct dark borders.",
+        "Lesions merge causing leaf yellowing.",
+        "Cool, wet conditions favor infection.",
+        "Spores spread by rain splash.",
+        "Disease cycles through crop debris."
+    ],
+    "anthracnose": [
+        "Dark, sunken lesions appear on stems and pods.",
+        "Spores spread by rain splash and wind.",
+        "Warm, humid conditions favor disease development.",
+        "Infected seeds show dark discoloration.",
+        "Disease overwinters in crop residue."
+    ],
+    "barley_stripe": [
+        "Long, yellow stripes develop between leaf veins.",
+        "Infected leaves split and shred lengthwise.",
+        "Seed-borne infection affects early growth.",
+        "Cool, moist conditions promote disease spread.",
+        "Fungicide seed treatment provides control."
+    ],
+    "common_root_rot": [
+        "Brown discoloration appears on subcrown internodes.",
+        "Root damage reduces water uptake efficiency.",
+        "Stress conditions increase disease severity.",
+        "Infected plants show premature ripening.",
+        "Crop rotation helps manage disease pressure."
+    ],
+    "crown_rot": [
+        "Brown discoloration develops at stem base.",
+        "White fungal growth visible under leaf sheaths.",
+        "Drought stress increases disease severity.",
+        "Whiteheads indicate severe infection.",
+        "Stubble management reduces inoculum."
+    ],
+    "crown_rust": [
+        "Orange-yellow pustules form on leaf surfaces.",
+        "Alternative host is common buckthorn.",
+        "Early infection causes greater yield loss.",
+        "Spores spread rapidly in warm conditions.",
+        "Resistant varieties provide best control."
+    ],
+    "downy_mildew": [
+        "Yellow lesions appear on upper leaf surface.",
+        "Gray fungal growth develops underneath leaves.",
+        "Cool, wet conditions favor infection.",
+        "Morning dew promotes spore production.",
+        "Disease spreads rapidly in dense canopies."
+    ],
+    "eyespot": [
+        "Elliptical lesions show eye-like appearance.",
+        "Stem base infection causes lodging.",
+        "Cool, wet conditions favor disease.",
+        "Early sowing increases disease risk.",
+        "Crop rotation reduces disease pressure."
+    ],
+    "halo_spot": [
+        "Brown spots surrounded by yellow halos.",
+        "Bacterial pathogen spreads in wet conditions.",
+        "Warm temperatures accelerate disease development.",
+        "Seed-borne infection initiates disease.",
+        "Disease severity increases with rainfall."
+    ],
+    "leaf_rust": [
+        "Small, round, orange-brown pustules form.",
+        "Spores easily spread by wind.",
+        "Warm temperatures promote rapid development.",
+        "Late infections affect grain filling.",
+        "Multiple races challenge resistance breeding."
+    ],
+    "leaf_scald": [
+        "Oval lesions with distinctive brown margins.",
+        "Lesions coalesce causing leaf death.",
+        "Rain splash spreads spores upward.",
+        "Cool temperatures favor disease spread.",
+        "Stubble burning reduces inoculum."
+    ],
+    "leaf_spot": [
+        "Circular spots with dark margins develop.",
+        "Spots merge causing leaf blighting.",
+        "Wet leaves promote infection.",
+        "Disease progresses from lower leaves.",
+        "Fungicides protect flag leaf."
+    ],
+    "loose_smut": [
+        "Entire head replaced by black spores.",
+        "Infection occurs at flowering.",
+        "Spores spread by wind during harvest.",
+        "Seed treatment prevents transmission.",
+        "Disease cycle requires one season."
+    ],
+    "net_blotch": [
+        "Net-like brown patterns on leaves.",
+        "Disease progresses from lower leaves.",
+        "Stubble carries disease between seasons.",
+        "Humid conditions favor infection.",
+        "Yield loss depends on timing."
+    ],
+    "nfnb": [
+        "Net-like dark brown lesions form.",
+        "Lesions follow leaf veins.",
+        "Disease spreads rapidly in wet weather.",
+        "Infected stubble maintains inoculum.",
+        "Resistance varies by variety."
+    ],
+    "pythium_root_rot": [
+        "Soft, water-soaked lesions on roots.",
+        "Seedling death in wet conditions.",
+        "Cool soil temperatures favor disease.",
+        "Soil compaction increases severity.",
+        "Seed treatments provide early protection."
+    ],
+    "scald": [
+        "Water-soaked lesions turn pale brown.",
+        "Lesions have distinctive dark margins.",
+        "Cool, wet conditions favor spread.",
+        "Spores splash between leaves.",
+        "Disease overseasons on stubble."
+    ],
+    "sfnb": [
+        "Dark brown spots with yellow halos.",
+        "Spots remain distinct, don't form nets.",
+        "Moisture necessary for infection.",
+        "Disease spreads up the plant.",
+        "Yield loss varies by timing."
+    ],
+    "stagonospora_blotch": [
+        "Lens-shaped lesions with yellow margins.",
+        "Black fruiting bodies in lesion centers.",
+        "Rain splash spreads spores upward.",
+        "Warm, wet weather favors development.",
+        "Upper leaves affect yield most."
+    ],
+    "snow_molds": [
+        "Pink or gray patches appear after snow melt.",
+        "Extended snow cover increases damage.",
+        "Fungal growth occurs under snow.",
+        "Dead patches slow spring recovery.",
+        "Snow management reduces severity."
+    ],
+    "gray_snow_mold": [
+        "Circular gray-white patches appear after snow melt.",
+        "Black sclerotia form in infected tissue.",
+        "Long periods of snow cover increase severity.",
+        "Disease active at near-freezing temperatures.",
+        "Plant recovery slower than with pink snow mold."
+    ],
+    "pink_snow_mold": [
+        "Circular patches turn pink-red at edges.",
+        "Disease active with or without snow cover.",
+        "Infection occurs in cool, wet conditions.",
+        "Matted grass shows salmon-pink color.",
+        "Recovery quicker than gray snow mold."
+    ],
+    "stem_rust": [
+        "Brick-red pustules break through stem tissue.",
+        "Infection weakens stems causing lodging.",
+        "Spores require warm temperatures to develop.",
+        "Alternative host is barberry.",
+        "Late-season infections most damaging."
+    ],
+    "stripe_rust": [
+        "Yellow-orange stripes form parallel to leaf veins.",
+        "Cool temperatures favor disease development.",
+        "Early infection reduces grain filling.",
+        "Spores can travel long distances.",
+        "New races overcome genetic resistance."
+    ],
+    "snow_rot": [
+        "Brown patches visible after snow melt.",
+        "Infected plants appear water-soaked.",
+        "Disease develops under persistent snow.",
+        "Mycelium visible in infected crown tissue.",
+        "Prevention requires good drainage."
+    ],
+    "take_all": [
+        "Black lesions form on root and crown.",
+        "Whiteheads develop before normal maturity.",
+        "Alkaline soils increase disease risk.",
+        "Symptoms worse in wet, compacted soils.",
+        "Crop rotation essential for control."
+    ],
+    "tan_spot": [
+        "Small dark spots enlarge with yellow halos.",
+        "Tan centers develop in mature lesions.",
+        "Stubble harbors pathogen between seasons.",
+        "Wet weather promotes spore release.",
+        "Resistance levels vary by variety."
+    ],
+    "agronomy": [
+        "Soil testing guides fertilizer recommendations.",
+        "Planting date affects crop development stages.",
+        "Row spacing optimizes light interception.",
+        "Seeding rates determine plant populations.",
+        "Nutrient timing maximizes yield potential."
+    ],
+    "plant_pathology": [
+        "Disease diagnosis requires systematic observation.",
+        "Pathogens interact with environmental conditions.",
+        "Prevention more effective than cure.",
+        "Multiple control methods increase effectiveness.",
+        "Monitoring crucial for disease management."
+    ],
+    "horticulture": [
+        "Plant spacing affects fruit quality.",
+        "Pruning maintains optimal canopy structure.",
+        "Water management critical for product quality.",
+        "Growth stages determine management timing.",
+        "Variety selection matches market requirements."
+    ],
+    "crop_rotation": [
+        "Different crops break disease cycles.",
+        "Rotations improve soil structure.",
+        "Diverse roots enhance soil health.",
+        "Nitrogen fixers benefit following crops.",
+        "Rotation length affects disease pressure."
+    ],
+    "genetic_resistance": [
+        "Major genes provide complete resistance.",
+        "Minor genes offer partial protection.",
+        "Resistance can break down over time.",
+        "Multiple genes increase durability.",
+        "Breeding programs stack resistance genes."
+    ],
+    "grain_quality": [
+        "Protein content affects end-use value.",
+        "Test weight indicates grain density.",
+        "Moisture content impacts storage life.",
+        "Disease damage reduces grain grade.",
+        "Weather conditions affect quality parameters."
+    ],
+    "feed_barley": [
+        "High protein desired for feed value.",
+        "Test weight indicates energy content.",
+        "Weather damage affects digestibility.",
+        "Storage conditions maintain quality.",
+        "Market specs less strict than malting."
+    ],
+    "malt_barley": [
+        "Protein content critical for malting.",
+        "Germination energy must exceed 95%.",
+        "Grain size uniformity important.",
+        "Weather damage reduces malting acceptance.",
+        "Premium prices reward quality standards."
+    ],
+    "harvest_malting": [
+        "Timing crucial for grain quality.",
+        "Moisture content affects storability.",
+        "Gentle threshing prevents damage.",
+        "Weather delays impact acceptance.",
+        "Clean sample essential for malting."
+    ],
+    "storage_malting": [
+        "Temperature control preserves germination.",
+        "Moisture monitoring prevents spoilage.",
+        "Aeration maintains grain quality.",
+        "Pest control essential in storage.",
+        "Regular testing tracks germination."
+    ],
+    "resistant_cultivars": [
+        "Disease resistance reduces fungicide need.",
+        "Yield penalty may affect choice.",
+        "Multiple resistance genes preferred.",
+        "Regional adaptation important.",
+        "New varieties improve resistance."
+    ],
+    "stubble_management": [
+        "Residue affects disease carryover.",
+        "Tillage reduces inoculum levels.",
+        "Standing stubble catches snow.",
+        "Decomposition rate impacts disease.",
+        "Ground cover prevents erosion."
+    ],
+    "disease_severity": [
+        "Percentage of tissue affected.",
+        "Rating scales standardize assessment.",
+        "Weather influences progression.",
+        "Timing of infection affects impact.",
+        "Variety resistance affects severity."
+    ],
+    "disease_incidence": [
+        "Percentage of plants infected.",
+        "Distribution pattern indicates spread.",
+        "Threshold levels guide treatment.",
+        "Scouting determines incidence.",
+        "Environmental conditions affect spread."
+    ],
+    "crop_loss": [
+        "Yield reduction measures impact.",
+        "Quality damage affects value.",
+        "Economic thresholds guide decisions.",
+        "Prevention more valuable than cure.",
+        "Multiple factors contribute to losses."
     ]
 }

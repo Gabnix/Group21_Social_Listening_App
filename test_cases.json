@@ -1,0 +1,24 @@
+{
+    "test_cases": [
+        {
+            "text": "Barley yellow dwarf virus showing symptoms of leaf yellowing and stunted growth in early stages",
+            "expected_category": "disease"
+        },
+        {
+            "text": "Protein content in malting barley samples must be between 9.5% and 11.5% for optimal brewing",
+            "expected_category": "malt_barley"
+        },
+        {
+            "text": "Crop rotation between cereals and legumes improves soil nitrogen content",
+            "expected_category": "crop_rotation"
+        },
+        {
+            "text": "Net-like brown lesions appearing on barley leaves after recent rainfall",
+            "expected_category": "net_blotch"
+        },
+        {
+            "text": "New resistant variety shows improved tolerance to multiple rust races",
+            "expected_category": "resistant_cultivars"
+        }
+    ]
+} 
