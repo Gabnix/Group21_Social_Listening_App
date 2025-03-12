@@ -71,10 +71,10 @@ def analyze_text():
     if 'text' not in data:
         return jsonify({"error": "No text provided"}), 400
     
-    text = data['text']
+    text = data['text','']
     
     # Use CombinedAnalyzer to process the text
-    preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
+    preprocessing_results, classification_results, dependency_results, sentiment_result = analyzer.analyze_text(text)
     
     # Convert spaCy tokens to serializable format
     processed_tokens = [
@@ -96,7 +96,8 @@ def analyze_text():
             "processed_tokens": processed_tokens
         },
         "classification": classification_results,
-        "dependencies": dependency_results
+        "dependencies": dependency_results,
+        "sentiment score": sentiment_result
     }
     
     return jsonify(result)

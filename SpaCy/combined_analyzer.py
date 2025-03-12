@@ -6,6 +6,11 @@ from spacy.cli import download
 import random
 from spacy.matcher import Matcher
 
+#For RoBERTa integration
+import torch
+import numpy as np
+from transformers import RobertaTokenizer, RobertaForSequenceClassification
+
 class CombinedAnalyzer:
     def __init__(self):
         """Initialize the CombinedAnalyzer with required models and components"""
@@ -19,7 +24,16 @@ class CombinedAnalyzer:
         
         if "attribute_ruler" not in self.nlp.pipe_names:
             self.nlp.add_pipe("attribute_ruler", after="tagger")
-            
+
+        #Initialise RoBERTa model
+        #Pretrained RoBERTa model for Sentiment Analysis 
+        self.roberta_tokenizer = RobertaTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment") 
+        self.roberta_model = RobertaForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+
+        #Add predefined keyword to inprove sentiment accuracy
+        self.positive_keywords = {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15}
+        self.negative_keywords = {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}
+
         # Configure attribute ruler patterns
         ruler = self.nlp.get_pipe("attribute_ruler")
         patterns = [
@@ -234,8 +248,9 @@ class CombinedAnalyzer:
         
         return dependencies
 
-    def analyze_text(self, text, save_path=None):
-        """Perform comprehensive text analysis: preprocessing, classification, and dependency parsing"""
+    
+    """def analyze_text(self, text, save_path=None):
+        """"""Perform comprehensive text analysis: preprocessing, classification, and dependency parsing""""""
         # Preprocess text
         preprocessing_results = self.preprocess_text(text)
         
@@ -251,7 +266,72 @@ class CombinedAnalyzer:
         if save_path:
             self.save_results(save_path, preprocessing_results, classification_results, dependency_results)
             
-        return preprocessing_results, classification_results, dependency_results
+        return preprocessing_results, classification_results, dependency_results"""
+    
+    #new analyse_text function
+    def analyze_text(self, text, save_path=None):
+
+        # Preprocess text
+        preprocessing_results = self.preprocess_text(text)
+
+        # Classify text if textcat is in pipeline
+        classification_results = None
+        if "textcat" in self.nlp.pipe_names:
+            classification_results = self.classify_text(preprocessing_results['processed_text'])
+        
+        # Analyze dependencies
+        dependency_results = self.analyze_dependencies(text)
+
+        # RoBERTa Sentiment Analysis
+        sentiment_results = self.sentiment_analysis(preprocessing_results['processed_text'])
+
+        # Save results if path provided
+        if save_path:
+            self.save_results(save_path, preprocessing_results, classification_results, dependency_results)
+            
+        return preprocessing_results, classification_results, dependency_results, sentiment_results
+
+
+    def sentiment_analysis(self, text):
+        """"Perform Sentiment Analysis using RoBERTa model"""
+        # Tokenize the text to ensure the size = 512
+        input = self.roberta_tokenizer(text, return_tensors="pt",truncation=True, padding=True)
+        
+        with torch.no_grad():
+            # Perform forward pass
+            output = self.roberta_model(**input)
+
+        # Get the predicted sentiment
+        sentiment = torch.softmax(output.logits, dim=-1)
+        score = sentiment[0].tolist()
+
+        # Get the enhance the sentiment score
+        new_score = self.sentiment_score_refinement(text, score)
+        new_score = [round(score, 3) for score in new_score]
+        return new_score
+
+    def sentiment_score_refinement(self, text, sentiment_score):
+        """Refine the score using predefined keywords"""
+        tune_score = 0
+        newText = text.lower()
+
+        # Check for positive keywords
+        for keyword, adjustment in self.positive_keywords.items():
+            if keyword in newText:
+                tune_score += adjustment
+
+        # Check for negative keywords
+        for keyword, adjustment in self.negative_keywords.items():
+            if keyword in newText:
+                tune_score -= abs(adjustment)
+
+        # Update the sentiment score
+        # Apply positive adjustments
+        sentiment_score[2] = min(1.0, max(0.0, sentiment_score[2] + adjustment)) #to ensure the score is between 0 and 1
+        # Apply negative adjustments
+        sentiment_score[0] = min(1.0, max(0.0, sentiment_score[0] - adjustment)) 
+        
+        return sentiment_score
 
     def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None):
         """Save analysis results to a file"""
