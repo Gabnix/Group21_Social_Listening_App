@@ -19,6 +19,106 @@
         {
             "text": "New resistant variety shows improved tolerance to multiple rust races",
             "expected_category": "resistant_cultivars"
+        },
+        {
+            "text": "White powdery growth covering upper leaf surface with yellowing underneath",
+            "expected_category": "powdery_mildew"
+        },
+        {
+            "text": "Soybean plants showing interveinal chlorosis in high pH soils",
+            "expected_category": "soybean"
+        },
+        {
+            "text": "Sclerotia forming in bleached stem lesions during flowering stage",
+            "expected_category": "sclerotinia"
+        },
+        {
+            "text": "Early season root rot causing seedling death in wet, compacted areas",
+            "expected_category": "pythium_root_rot"
+        },
+        {
+            "text": "Canola blackleg lesions showing characteristic black dots in pale centers",
+            "expected_category": "blackleg"
+        },
+        {
+            "text": "Regular soil testing reveals declining phosphorus levels in continuous cropping",
+            "expected_category": "agronomy"
+        },
+        {
+            "text": "Wheat stripe rust showing characteristic yellow stripes parallel to leaf veins",
+            "expected_category": "stripe_rust"
+        },
+        {
+            "text": "Crown rot symptoms more severe in water-stressed wheat plants",
+            "expected_category": "crown_rot"
+        },
+        {
+            "text": "Lentil plants showing multiple branches with uniform pod maturity",
+            "expected_category": "lentils"
+        },
+        {
+            "text": "Disease assessment showing 40% leaf area affected in flag leaf",
+            "expected_category": "disease_severity"
+        },
+        {
+            "text": "Random field sampling reveals 15% of plants showing infection symptoms",
+            "expected_category": "disease_incidence"
+        },
+        {
+            "text": "QTL analysis identifies three major resistance genes in new wheat variety",
+            "expected_category": "genetic_resistance"
+        },
+        {
+            "text": "Post-harvest grain testing shows 13% protein with 78 kg/hl test weight",
+            "expected_category": "grain_quality"
+        },
+        {
+            "text": "Stubble decomposition rate slower in dry autumn conditions",
+            "expected_category": "stubble_management"
+        },
+        {
+            "text": "Yield loss estimated at 30% due to early season frost damage",
+            "expected_category": "crop_loss"
+        },
+        {
+            "text": "Pink snow mold patches appearing after winter snow melt",
+            "expected_category": "pink_snow_mold"
+        },
+        {
+            "text": "Corn tassels emerging five days before silk emergence",
+            "expected_category": "corn"
+        },
+        {
+            "text": "Rice panicles showing straighthead symptoms in flooded fields",
+            "expected_category": "rice"
+        },
+        {
+            "text": "Chickpea plants forming effective nodules with pink internal color",
+            "expected_category": "chickpea"
+        },
+        {
+            "text": "Systematic disease survey reveals patterns of pathogen spread",
+            "expected_category": "plant_pathology"
+        },
+        {
+            "text": "Storage conditions maintained at 12°C with 45% relative humidity",
+            "expected_category": "storage_malting"
+        },
+        {
+            "text": "Feed barley samples showing elevated DON mycotoxin levels",
+            "expected_category": "feed_barley"
+        },
+        {
+            "text": "Harvest timing delayed due to uneven crop maturity",
+            "expected_category": "harvest_malting"
+        },
+        {
+            "text": "Dark brown net-form lesions following leaf veins",
+            "expected_category": "nfnb"
+        },
+        {
+            "text": "Leaf scald symptoms showing typical oval lesions with brown margins",
+            "expected_category": "leaf_scald"
         }
     ]
 } 

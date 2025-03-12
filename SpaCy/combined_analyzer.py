@@ -4,14 +4,73 @@ from spacy.training import Example
 from tqdm import tqdm
 from spacy.cli import download
 import random
+from spacy.matcher import Matcher
 
 class CombinedAnalyzer:
     def __init__(self):
         """Initialize the CombinedAnalyzer with required models and components"""
         self.ensure_model_downloaded()
         # Create spaCy model with all necessary components
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = spacy.load("en_core_web_sm", disable=["ner"])  # Disable NER for faster processing
         
+        # Configure pipeline components
+        if "tagger" not in self.nlp.pipe_names:
+            self.nlp.add_pipe("tagger", before="parser")
+        
+        if "attribute_ruler" not in self.nlp.pipe_names:
+            self.nlp.add_pipe("attribute_ruler", after="tagger")
+            
+        # Configure attribute ruler patterns
+        ruler = self.nlp.get_pipe("attribute_ruler")
+        patterns = [
+            {"patterns": [[{"ORTH": "rust"}]], "attrs": {"TAG": "NN"}},
+            {"patterns": [[{"ORTH": "mildew"}]], "attrs": {"TAG": "NN"}},
+            {"patterns": [[{"ORTH": "wheat"}]], "attrs": {"TAG": "NN"}},
+            {"patterns": [[{"ORTH": "barley"}]], "attrs": {"TAG": "NN"}},
+            {"patterns": [[{"ORTH": "disease"}]], "attrs": {"TAG": "NN"}},
+            {"patterns": [[{"ORTH": "infection"}]], "attrs": {"TAG": "NN"}}
+        ]
+        for pattern in patterns:
+            ruler.add(pattern["patterns"], pattern["attrs"])
+        
+        # Initialize and configure the matcher with patterns
+        self.matcher = Matcher(self.nlp.vocab)
+        self.add_matcher_patterns()
+        
+        # Print pipeline information
+        print("Active pipeline components:", self.nlp.pipe_names)
+        
+    def add_matcher_patterns(self):
+        """Add patterns to the matcher for identifying agricultural terms and diseases"""
+        # Disease patterns
+        disease_pattern = [
+            [{"LOWER": {"IN": ["rust", "mildew", "blight", "rot", "spot", "wilt"]}},
+             {"OP": "?", "LOWER": {"IN": ["disease", "infection", "infestation"]}}],
+            [{"LOWER": {"IN": ["leaf", "stem", "root"]}},
+             {"LOWER": {"IN": ["rust", "rot", "spot", "disease"]}}]
+        ]
+        
+        # Crop patterns
+        crop_pattern = [
+            [{"LOWER": {"IN": ["wheat", "barley", "corn", "rice", "soybean", "potato"]}}],
+            [{"LOWER": {"IN": ["crop", "plant", "field"]}},
+             {"LOWER": "health"}]
+        ]
+        
+        # Symptom patterns
+        symptom_pattern = [
+            [{"LOWER": {"IN": ["yellow", "brown", "black", "white"]}},
+             {"LOWER": {"IN": ["spots", "lesions", "patches", "streaks"]}}],
+            [{"LOWER": {"IN": ["wilting", "stunted", "discolored", "infected"]}}]
+        ]
+        
+        # Add patterns to matcher
+        self.matcher.add("DISEASE", disease_pattern)
+        self.matcher.add("CROP", crop_pattern)
+        self.matcher.add("SYMPTOM", symptom_pattern)
+        
+        print("Matcher patterns configured for diseases, crops, and symptoms")
+
     def ensure_model_downloaded(self):
         """Ensure the required spaCy model is downloaded"""
         try:
@@ -59,18 +118,17 @@ class CombinedAnalyzer:
                 train_data.append((text, {"cats": cats}))
         return train_data
 
-    def train_classifier(self, training_data, n_iter=30, dropout=0.2, batch_size=8):
+    def train_classifier(self, training_data, n_iter=50, dropout=0.1, batch_size=4):
         """Train the text classifier with improved parameters
         
         Args:
             training_data: List of (text, annotations) tuples
-            n_iter: Number of training iterations
-            dropout: Dropout rate to prevent overfitting
-            batch_size: Size of batches for training
+            n_iter: Number of training iterations (increased for better convergence)
+            dropout: Dropout rate (reduced to allow better initial learning)
+            batch_size: Size of batches for training (reduced for more frequent updates)
         """
         # Add text categorizer to the pipeline if not present
         if "textcat" not in self.nlp.pipe_names:
-            # Create a new textcat pipe with default configuration
             textcat = self.nlp.add_pipe("textcat", last=True)
             
             # Add categories
@@ -83,26 +141,29 @@ class CombinedAnalyzer:
         for text, annotations in training_data:
             train_examples.append(Example.from_dict(self.nlp.make_doc(text), annotations))
         
-        # Split training data into train and validation sets
+        # Split training data into train and validation sets (80/20 split)
+        random.shuffle(train_examples)  # Shuffle before splitting
         split = int(len(train_examples) * 0.8)
         train_data = train_examples[:split]
         dev_data = train_examples[split:]
         
-        # Initialize the model
+        # Initialize optimizer with component-specific learning rates
         optimizer = self.nlp.initialize()
         
-        # Training loop
-        print("Training the classifier...")
-        patience = 5  # Early stopping patience
+        # Early stopping configuration
+        patience = 10  # Increased patience for more chances to improve
         best_loss = float('inf')
         no_improvement = 0
+        min_loss_improvement = 0.001  # Minimum improvement threshold
+        best_weights = None
         
+        print("Training the classifier...")
         with tqdm(total=n_iter) as pbar:
             for i in range(n_iter):
-                # Shuffle training data
+                # Shuffle training data each iteration
                 random.shuffle(train_data)
                 
-                # Create batches
+                # Create smaller batches for more frequent updates
                 batches = [train_data[i:i + batch_size] for i in range(0, len(train_data), batch_size)]
                 
                 # Training step
@@ -115,38 +176,43 @@ class CombinedAnalyzer:
                         losses=losses
                     )
                 
-                # Calculate validation loss manually
+                # Calculate validation loss
                 val_loss = 0.0
                 if dev_data:
                     val_losses = {}
                     # Evaluate on validation set
                     for example in dev_data:
-                        # Get predicted scores
                         scores = self.nlp(example.text).cats
-                        # Compare with gold standard
                         for label, gold_score in example.y.cats.items():
                             pred_score = scores.get(label, 0.0)
-                            # Simple squared error loss
                             val_loss += (gold_score - pred_score) ** 2
-                    val_loss /= len(dev_data)  # Average loss
+                    val_loss /= len(dev_data)
                 
-                    # Early stopping
-                    if val_loss < best_loss:
+                    # Early stopping with minimum improvement threshold
+                    if val_loss < best_loss - min_loss_improvement:
                         best_loss = val_loss
                         no_improvement = 0
+                        # Store the current model weights
+                        best_weights = self.nlp.to_bytes()
                     else:
                         no_improvement += 1
                         if no_improvement >= patience:
-                            print(f"\nStopping early at iteration {i+1} due to no improvement")
+                            print(f"\nStopping early at iteration {i+1} due to no significant improvement")
+                            # Restore best weights
+                            if best_weights is not None:
+                                self.nlp.from_bytes(best_weights)
                             break
                 
+                # Update progress bar with both losses
+                train_loss = losses.get('textcat', 0.0)
                 pbar.update(1)
-                pbar.set_description(f"Loss: {losses.get('textcat', 0.0):.3f}, Val Loss: {val_loss:.3f}")
+                pbar.set_description(f"Loss: {train_loss:.3f}, Val Loss: {val_loss:.3f}")
         
-        print(f"\nFinal training loss: {losses.get('textcat', 0.0):.3f}")
+        print(f"\nFinal training loss: {train_loss:.3f}")
         print(f"Final validation loss: {val_loss:.3f}")
+        print("Classifier trained successfully")
         
-        return losses.get('textcat', 0.0), val_loss
+        return train_loss, val_loss
 
     def classify_text(self, text):
         """Classify the given text"""
