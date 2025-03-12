@@ -10,7 +10,6 @@ from pathlib import Path
 
 #For RoBERTa integration
 import torch
-import numpy as np
 from transformers import RobertaTokenizer, RobertaForSequenceClassification
 
 class CombinedAnalyzer:
@@ -26,6 +25,16 @@ class CombinedAnalyzer:
         
         if "attribute_ruler" not in self.nlp.pipe_names:
             self.nlp.add_pipe("attribute_ruler", after="tagger")
+
+        #Initialise RoBERTa model
+        #Pretrained RoBERTa model for Sentiment Analysis 
+        self.roberta_tokenizer = RobertaTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment") 
+        self.roberta_model = RobertaForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+
+        #Add predefined keyword to inprove sentiment accuracy
+        self.positive_keywords = {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15}
+        self.negative_keywords = {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}
+
 
         #Initialise RoBERTa model
         #Pretrained RoBERTa model for Sentiment Analysis 
