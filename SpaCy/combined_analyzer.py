@@ -376,7 +376,13 @@ class CombinedAnalyzer:
         # Get the enhance the sentiment score
         new_score = self.sentiment_score_refinement(text, score)
         new_score = [round(score, 3) for score in new_score]
-        return new_score
+
+        formatted_score = {
+            "Negative": new_score[0],
+            "Neutral": new_score[1],
+            "Positive": new_score[2]
+        }
+        return formatted_score
 
     def sentiment_score_refinement(self, text, sentiment_score):
         """Refine the score using predefined keywords"""
@@ -415,6 +421,7 @@ class CombinedAnalyzer:
             json.dump(output, f, indent=4)
         
         print(f"Results saved to {output_file}")
+
     def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None, sentiment_results=None):
         """Save analysis results to a file"""
         with open(output_file, 'w', encoding='utf-8') as f:
