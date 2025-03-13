@@ -5,6 +5,8 @@ from tqdm import tqdm
 from spacy.cli import download
 import random
 from spacy.matcher import Matcher
+import numpy as np
+from pathlib import Path
 
 class CombinedAnalyzer:
     def __init__(self):
@@ -40,28 +42,36 @@ class CombinedAnalyzer:
         # Print pipeline information
         print("Active pipeline components:", self.nlp.pipe_names)
         
+        # Agricultural-specific stopwords
+        self.agri_stopwords = {"field", "farm", "crop", "plant", "seed", "grow", "harvest"}
+        
+        # Load training data
+        self.load_training_data()
+        
     def add_matcher_patterns(self):
         """Add patterns to the matcher for identifying agricultural terms and diseases"""
         # Disease patterns
         disease_pattern = [
-            [{"LOWER": {"IN": ["rust", "mildew", "blight", "rot", "spot", "wilt"]}},
-             {"OP": "?", "LOWER": {"IN": ["disease", "infection", "infestation"]}}],
-            [{"LOWER": {"IN": ["leaf", "stem", "root"]}},
-             {"LOWER": {"IN": ["rust", "rot", "spot", "disease"]}}]
+            [{"LOWER": {"IN": ["rust", "mildew", "smut", "blight", "rot", "spot", "mosaic", "wilt", "canker", "scab"]}}],
+            [{"LOWER": "powdery"}, {"LOWER": "mildew"}],
+            [{"LOWER": "leaf"}, {"LOWER": "spot"}],
+            [{"LOWER": "stem"}, {"LOWER": "rust"}],
+            [{"LOWER": "black"}, {"LOWER": "leg"}],
+            [{"LOWER": "root"}, {"LOWER": "rot"}]
         ]
         
         # Crop patterns
         crop_pattern = [
-            [{"LOWER": {"IN": ["wheat", "barley", "corn", "rice", "soybean", "potato"]}}],
-            [{"LOWER": {"IN": ["crop", "plant", "field"]}},
-             {"LOWER": "health"}]
+            [{"LOWER": {"IN": ["wheat", "barley", "corn", "rice", "soybean", "cotton", "canola", "oats"]}}],
+            [{"LOWER": {"IN": ["chickpea", "lentil", "lupin", "faba", "mungbean", "safflower", "sorghum"]}}]
         ]
         
         # Symptom patterns
         symptom_pattern = [
-            [{"LOWER": {"IN": ["yellow", "brown", "black", "white"]}},
-             {"LOWER": {"IN": ["spots", "lesions", "patches", "streaks"]}}],
-            [{"LOWER": {"IN": ["wilting", "stunted", "discolored", "infected"]}}]
+            [{"LOWER": {"IN": ["wilting", "yellowing", "spotting", "lesion", "chlorosis", "necrosis"]}}],
+            [{"LOWER": "leaf"}, {"LOWER": {"IN": ["curl", "spot", "wilt", "burn"]}}],
+            [{"LOWER": "stem"}, {"LOWER": {"IN": ["canker", "rot", "lesion"]}}],
+            [{"LOWER": "root"}, {"LOWER": {"IN": ["rot", "damage", "lesion"]}}]
         ]
         
         # Add patterns to matcher
@@ -93,20 +103,43 @@ class CombinedAnalyzer:
             print(f"Error: File {file_path} is not in valid JSON format.")
             return None
 
+    def load_training_data(self):
+        """Load and prepare training data from JSON file"""
+        try:
+            with open("SpaCy/categories_data.json", "r") as f:
+                self.categories_data = json.load(f)
+            print(f"Loaded {len(self.categories_data)} categories with {sum(len(examples) for examples in self.categories_data.values())} training examples")
+        except Exception as e:
+            print(f"Error loading training data: {e}")
+            self.categories_data = {}
+
     def preprocess_text(self, text):
-        """Preprocess text by removing stopwords and punctuation"""
-        doc = self.nlp(text)
-        token_count_before = len(doc)
+        """Preprocess text with agricultural domain focus"""
+        # Basic preprocessing
+        text = text.lower().strip()
         
-        # Remove stopwords and punctuation
-        processed_tokens = [token for token in doc if not token.is_stop and not token.is_punct]
-        token_count_after = len(processed_tokens)
+        # Create SpaCy doc
+        doc = self.nlp(text)
+        
+        # Extract agricultural terms
+        matches = self.matcher(doc)
+        agri_terms = []
+        for match_id, start, end in matches:
+            span = doc[start:end]
+            agri_terms.append({
+                "text": span.text,
+                "label": self.nlp.vocab.strings[match_id],
+                "start": start,
+                "end": end
+            })
+        
+        # Remove agricultural stopwords while keeping important domain terms
+        tokens = [token.text for token in doc if not (token.is_stop and token.text not in self.agri_stopwords)]
         
         return {
-            'original_count': token_count_before,
-            'processed_count': token_count_after,
-            'processed_tokens': processed_tokens,
-            'processed_text': ' '.join([token.text for token in processed_tokens])
+            "processed_text": " ".join(tokens),
+            "agricultural_terms": agri_terms,
+            "doc": doc
         }
 
     def prepare_training_data(self, data):
@@ -118,121 +151,147 @@ class CombinedAnalyzer:
                 train_data.append((text, {"cats": cats}))
         return train_data
 
-    def train_classifier(self, training_data, n_iter=50, dropout=0.1, batch_size=4):
-        """Train the text classifier with improved parameters
+    def train_classifier(self, n_iter=50):
+        """Train text classifier with agricultural focus"""
+        # Prepare training data
+        train_texts = []
+        train_labels = []
         
-        Args:
-            training_data: List of (text, annotations) tuples
-            n_iter: Number of training iterations (increased for better convergence)
-            dropout: Dropout rate (reduced to allow better initial learning)
-            batch_size: Size of batches for training (reduced for more frequent updates)
-        """
-        # Add text categorizer to the pipeline if not present
-        if "textcat" not in self.nlp.pipe_names:
-            textcat = self.nlp.add_pipe("textcat", last=True)
-            
-            # Add categories
-            categories = set(cat for _, annot in training_data for cat in annot['cats'].keys())
-            for category in categories:
-                textcat.add_label(category)
+        for category, examples in self.categories_data.items():
+            for example in examples:
+                train_texts.append(example)
+                train_labels.append(category)
         
-        # Convert training data to spaCy's format
-        train_examples = []
-        for text, annotations in training_data:
-            train_examples.append(Example.from_dict(self.nlp.make_doc(text), annotations))
+        # Split into training and validation sets
+        indices = list(range(len(train_texts)))
+        random.shuffle(indices)
+        split = int(0.8 * len(indices))
         
-        # Split training data into train and validation sets (80/20 split)
-        random.shuffle(train_examples)  # Shuffle before splitting
-        split = int(len(train_examples) * 0.8)
-        train_data = train_examples[:split]
-        dev_data = train_examples[split:]
+        train_indices = indices[:split]
+        val_indices = indices[split:]
         
-        # Initialize optimizer with component-specific learning rates
-        optimizer = self.nlp.initialize()
+        # Training configuration
+        config = {
+            "batch_size": 4,
+            "dropout": 0.1,
+            "learning_rate": 0.001,
+            "patience": 10,
+            "min_loss_improvement": 0.001
+        }
         
-        # Early stopping configuration
-        patience = 10  # Increased patience for more chances to improve
+        # Initialize text classifier
+        textcat = self.nlp.add_pipe("textcat", config={"exclusive_classes": True})
+        
+        # Add labels
+        for label in set(train_labels):
+            textcat.add_label(label)
+        
+        # Training loop
+        print("Training agricultural text classifier...")
         best_loss = float('inf')
-        no_improvement = 0
-        min_loss_improvement = 0.001  # Minimum improvement threshold
+        patience_counter = 0
         best_weights = None
         
-        print("Training the classifier...")
-        with tqdm(total=n_iter) as pbar:
+        # Disable other pipeline components during training
+        other_pipes = [pipe for pipe in self.nlp.pipe_names if pipe != "textcat"]
+        with self.nlp.disable_pipes(*other_pipes):
             for i in range(n_iter):
-                # Shuffle training data each iteration
-                random.shuffle(train_data)
-                
-                # Create smaller batches for more frequent updates
-                batches = [train_data[i:i + batch_size] for i in range(0, len(train_data), batch_size)]
-                
-                # Training step
                 losses = {}
-                for batch in batches:
-                    self.nlp.update(
-                        batch,
-                        sgd=optimizer,
-                        drop=dropout,
-                        losses=losses
-                    )
+                random.shuffle(train_indices)
                 
-                # Calculate validation loss
-                val_loss = 0.0
-                if dev_data:
-                    val_losses = {}
-                    # Evaluate on validation set
-                    for example in dev_data:
-                        scores = self.nlp(example.text).cats
-                        for label, gold_score in example.y.cats.items():
-                            pred_score = scores.get(label, 0.0)
-                            val_loss += (gold_score - pred_score) ** 2
-                    val_loss /= len(dev_data)
+                # Training batch
+                for batch_start in tqdm(range(0, len(train_indices), config["batch_size"])):
+                    batch_end = min(batch_start + config["batch_size"], len(train_indices))
+                    batch_indices = train_indices[batch_start:batch_end]
+                    
+                    batch_texts = [train_texts[i] for i in batch_indices]
+                    batch_labels = [train_labels[i] for i in batch_indices]
+                    
+                    docs = [self.nlp.make_doc(text) for text in batch_texts]
+                    examples = []
+                    for j, doc in enumerate(docs):
+                        label = batch_labels[j]
+                        cats = {l: (l == label) for l in textcat.labels}
+                        examples.append(Example.from_dict(doc, {"cats": cats}))
+                    
+                    self.nlp.update(examples, drop=config["dropout"], losses=losses)
                 
-                    # Early stopping with minimum improvement threshold
-                    if val_loss < best_loss - min_loss_improvement:
-                        best_loss = val_loss
-                        no_improvement = 0
-                        # Store the current model weights
-                        best_weights = self.nlp.to_bytes()
-                    else:
-                        no_improvement += 1
-                        if no_improvement >= patience:
-                            print(f"\nStopping early at iteration {i+1} due to no significant improvement")
-                            # Restore best weights
-                            if best_weights is not None:
-                                self.nlp.from_bytes(best_weights)
-                            break
+                # Validation
+                val_losses = []
+                for val_index in val_indices:
+                    val_text = train_texts[val_index]
+                    val_label = train_labels[val_index]
+                    
+                    doc = self.nlp.make_doc(val_text)
+                    cats = {l: (l == val_label) for l in textcat.labels}
+                    example = Example.from_dict(doc, {"cats": cats})
+                    val_losses.append(textcat.get_loss(example))
                 
-                # Update progress bar with both losses
-                train_loss = losses.get('textcat', 0.0)
-                pbar.update(1)
-                pbar.set_description(f"Loss: {train_loss:.3f}, Val Loss: {val_loss:.3f}")
+                val_loss = np.mean(val_losses)
+                
+                # Early stopping check
+                if val_loss < best_loss - config["min_loss_improvement"]:
+                    best_loss = val_loss
+                    patience_counter = 0
+                    best_weights = textcat.model.copy()
+                else:
+                    patience_counter += 1
+                
+                if patience_counter >= config["patience"]:
+                    print(f"Early stopping at iteration {i+1}")
+                    break
+                
+                if (i + 1) % 10 == 0:
+                    print(f"Iteration {i+1}: Train Loss: {losses['textcat']:.3f}, Val Loss: {val_loss:.3f}")
         
-        print(f"\nFinal training loss: {train_loss:.3f}")
-        print(f"Final validation loss: {val_loss:.3f}")
-        print("Classifier trained successfully")
+        # Restore best weights
+        if best_weights is not None:
+            textcat.model = best_weights
         
-        return train_loss, val_loss
+        print("Training completed!")
 
     def classify_text(self, text):
-        """Classify the given text"""
-        doc = self.nlp(text)
-        return doc.cats
+        """Classify text with confidence scores"""
+        # Preprocess text
+        processed = self.preprocess_text(text)
+        doc = processed["doc"]
+        
+        # Get classification scores
+        scores = doc.cats
+        
+        # Enhance results with agricultural terms
+        result = {
+            "classification": {
+                "category": max(scores.items(), key=lambda x: x[1])[0],
+                "scores": scores
+            },
+            "agricultural_terms": processed["agricultural_terms"]
+        }
+        
+        return result
 
     def analyze_dependencies(self, text):
-        """Analyze dependencies in the text"""
+        """Analyze syntactic dependencies with agricultural focus"""
         doc = self.nlp(text)
-        dependencies = []
         
+        # Extract dependencies with agricultural context
+        deps = []
         for token in doc:
-            dependencies.append({
-                'token': token.text,
-                'head': token.head.text,
-                'dependency': token.dep_,
-                'pos': token.pos_
-            })
+            # Focus on agricultural terms and their relationships
+            if (token.dep_ in ["nsubj", "dobj", "pobj"] or 
+                token.head.dep_ in ["nsubj", "dobj", "pobj"] or
+                token.text.lower() in self.agri_stopwords):
+                
+                deps.append({
+                    "token": token.text,
+                    "pos": token.pos_,
+                    "dependency": token.dep_,
+                    "head": token.head.text,
+                    "head_pos": token.head.pos_,
+                    "children": [child.text for child in token.children]
+                })
         
-        return dependencies
+        return deps
 
     def analyze_text(self, text, save_path=None):
         """Perform comprehensive text analysis: preprocessing, classification, and dependency parsing"""
@@ -249,36 +308,23 @@ class CombinedAnalyzer:
         
         # Save results if path provided
         if save_path:
-            self.save_results(save_path, preprocessing_results, classification_results, dependency_results)
+            self.save_results(text, classification_results, dependency_results, save_path)
             
         return preprocessing_results, classification_results, dependency_results
 
-    def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None):
-        """Save analysis results to a file"""
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write("Comprehensive Text Analysis Results\n")
-            f.write("================================\n\n")
-            
-            f.write("Preprocessing Results:\n")
-            f.write("-" * 20 + "\n")
-            f.write(f"Original token count: {preprocessing_results['original_count']}\n")
-            f.write(f"Processed token count: {preprocessing_results['processed_count']}\n")
-            f.write("\nProcessed tokens:\n")
-            f.write("-" * 20 + "\n")
-            for token in preprocessing_results['processed_tokens']:
-                f.write(f"{token.text}\n")
-            
-            if classification_results:
-                f.write("\nClassification Results:\n")
-                f.write("-" * 20 + "\n")
-                for category, score in classification_results.items():
-                    f.write(f"{category}: {score:.2f}\n")
-            
-            if dependency_results:
-                f.write("\nDependency Analysis Results:\n")
-                f.write("-" * 20 + "\n")
-                for dep in dependency_results:
-                    f.write(f"{dep['token']} -> {dep['head']} ({dep['dependency']}) [POS: {dep['pos']}]\n")
+    def save_results(self, text, classification_results, dependency_results, output_file="analysis_results.json"):
+        """Save analysis results to file"""
+        output = {
+            "input_text": text,
+            "classification": classification_results["classification"],
+            "agricultural_terms": classification_results["agricultural_terms"],
+            "dependencies": dependency_results
+        }
+        
+        with open(output_file, "w") as f:
+            json.dump(output, f, indent=4)
+        
+        print(f"Results saved to {output_file}")
 
 def main():
     # Initialize analyzer
@@ -289,7 +335,7 @@ def main():
     if training_data:
         # Prepare and train classifier
         train_data = analyzer.prepare_training_data(training_data)
-        train_loss, val_loss = analyzer.train_classifier(train_data)
+        analyzer.train_classifier()
     
     # Load and analyze text
     text_data = analyzer.load_data('input.txt', is_json=False)
@@ -297,10 +343,10 @@ def main():
         # Perform analysis and save results
         preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(
             text_data, 
-            save_path='combined_analysis_results.txt'
+            save_path='combined_analysis_results.json'
         )
         
-        print("\nAnalysis completed! Results have been saved to 'combined_analysis_results.txt'")
+        print("\nAnalysis completed! Results have been saved to 'combined_analysis_results.json'")
 
 if __name__ == "__main__":
     main() 
