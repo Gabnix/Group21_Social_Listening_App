@@ -51,6 +51,25 @@ def load_and_train():
 # Load and train at startup
 load_and_train()
 
+@app.route('/', methods=['GET'])
+def home():
+    """Home endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Agricultural Text Analysis API",
+        "endpoints": {
+            "/": "Home (GET)",
+            "/health": "Health check (GET)",
+            "/analyze": "Analyze text (POST)",
+            "/preprocess": "Preprocess text (POST)",
+            "/dependencies": "Analyze dependencies (POST)",
+            "/classify": "Classify text (POST)",
+            "/train": "Train classifier (POST)",
+            "/retrain": "Retrain classifier (POST)",
+            "/test": "Test classifier (POST)"
+        }
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint."""
@@ -76,24 +95,11 @@ def analyze_text():
     # Use CombinedAnalyzer to process the text
     preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
     
-    # Convert spaCy tokens to serializable format
-    processed_tokens = [
-        {
-            "text": token.text,
-            "lemma": token.lemma_,
-            "pos": token.pos_,
-            "tag": token.tag_,
-            "dep": token.dep_
-        } for token in preprocessing_results['processed_tokens']
-    ]
-    
-    # Prepare the response
+    # Create the response with the correct structure
     result = {
         "preprocessing": {
-            "original_count": preprocessing_results['original_count'],
-            "processed_count": preprocessing_results['processed_count'],
-            "processed_text": preprocessing_results['processed_text'],
-            "processed_tokens": processed_tokens
+            "processed_text": preprocessing_results["processed_text"],
+            "agricultural_terms": preprocessing_results["agricultural_terms"]
         },
         "classification": classification_results,
         "dependencies": dependency_results
