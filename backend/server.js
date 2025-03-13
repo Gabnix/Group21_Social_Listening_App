@@ -9,6 +9,38 @@ dotenv.config();
 const app = express();
 const PORT = 9000;
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 600000; // 10 minutes in milliseconds
+const MAX_REQUESTS = 600; // Maximum requests per window (Reddit's limit)
+let requestCount = 0;
+let windowStart = Date.now();
+
+// Rate limiting middleware
+function rateLimiter(req, res, next) {
+  const now = Date.now();
+  
+  // Reset window if needed
+  if (now - windowStart >= RATE_LIMIT_WINDOW) {
+    requestCount = 0;
+    windowStart = now;
+  }
+
+  // Check if we're over the limit
+  if (requestCount >= MAX_REQUESTS) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded. Please try again later.',
+      retryAfter: Math.ceil((windowStart + RATE_LIMIT_WINDOW - now) / 1000)
+    });
+  }
+
+  // Increment counter and proceed
+  requestCount++;
+  next();
+}
+
+// Apply rate limiting to all routes
+app.use(rateLimiter);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -17,7 +49,7 @@ app.use(express.json());
 const REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID;
 const REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET;
 
-// Get Reddit access token
+// OAuth2 authentication implementation
 async function getRedditAccessToken() {
   try {
     const response = await axios.post(
@@ -42,6 +74,12 @@ async function getRedditAccessToken() {
 
 // Helper function to build Reddit search query
 function buildSearchQuery(params) {
+// Handles complex query building:
+// - Exact phrase matching with quotes
+// - AND/OR operators
+// - Subreddit filtering
+// - NSFW content filtering
+// - Time range and sort parameters
   const {
     keyword,
     subreddits = [],
@@ -76,7 +114,7 @@ function buildSearchQuery(params) {
 
   // Process terms and build query
   let query = terms
-    .filter(term => term.trim()) // Remove empty terms
+    .filter(term => term.trim())
     .map(term => {
       term = term.trim();
       // Keep existing quotes
@@ -93,7 +131,7 @@ function buildSearchQuery(params) {
       }
       return term;
     })
-    .join(' '); // Join with spaces
+    .join(' ');
 
   // Add subreddit filtering
   if (subreddits.length > 0) {
@@ -106,7 +144,7 @@ function buildSearchQuery(params) {
     query = `${query} NOT nsfw:1`;
   }
 
-  console.log('Search query:', query); // Debug log
+  console.log('Search query:', query);
 
   return {
     q: query,
@@ -141,6 +179,7 @@ app.get('/api/search', async (req, res) => {
       includeNsfw: includeNsfw === 'true'
     });
     
+    // Secure API calls with authentication header
     const queryString = new URLSearchParams(searchParams).toString();
     const response = await axios.get(
       `https://oauth.reddit.com/search?${queryString}`,
@@ -165,7 +204,6 @@ app.get('/api/search', async (req, res) => {
         numComments: post.num_comments,
         selftext: post.selftext,
         thumbnail: post.thumbnail !== 'self' && post.thumbnail !== 'default' ? post.thumbnail : null,
-        // Additional fields
         upvoteRatio: post.upvote_ratio,
         isNsfw: post.over_18,
         flair: post.link_flair_text,
@@ -174,9 +212,9 @@ app.get('/api/search', async (req, res) => {
       };
     });
 
-    // Sort results by relevance score (combination of score and comments)
+    // Sort results by relevance score
     posts.sort((a, b) => {
-      const scoreA = a.score + (a.numComments * 2); // Weight comments more
+      const scoreA = a.score + (a.numComments * 2);
       const scoreB = b.score + (b.numComments * 2);
       return scoreB - scoreA;
     });
@@ -196,7 +234,16 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-}); 
+// Only start the server if we're not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export for testing
+module.exports = {
+  app,
+  getRedditAccessToken,
+  buildSearchQuery
+};
