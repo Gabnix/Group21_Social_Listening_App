@@ -415,6 +415,39 @@ class CombinedAnalyzer:
             json.dump(output, f, indent=4)
         
         print(f"Results saved to {output_file}")
+    def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None, sentiment_results=None):
+        """Save analysis results to a file"""
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("Comprehensive Text Analysis Results\n")
+            f.write("================================\n\n")
+            
+            f.write("Preprocessing Results:\n")
+            f.write("-" * 20 + "\n")
+            f.write(f"Original token count: {preprocessing_results['original_count']}\n")
+            f.write(f"Processed token count: {preprocessing_results['processed_count']}\n")
+            f.write("\nProcessed tokens:\n")
+            f.write("-" * 20 + "\n")
+            for token in preprocessing_results['processed_tokens']:
+                f.write(f"{token.text}\n")
+            
+            if classification_results:
+                f.write("\nClassification Results:\n")
+                f.write("-" * 20 + "\n")
+                for category, score in classification_results.items():
+                    f.write(f"{category}: {score:.2f}\n")
+            
+            if dependency_results:
+                f.write("\nDependency Analysis Results:\n")
+                f.write("-" * 20 + "\n")
+                for dep in dependency_results:
+                    f.write(f"{dep['token']} -> {dep['head']} ({dep['dependency']}) [POS: {dep['pos']}]\n")
+
+            if sentiment_results:
+                f.write("\nSentiment Analysis Results:\n")
+                f.write("-" * 20 + "\n")
+                f.write(f"Negative: {sentiment_results[0]}\n")
+                f.write(f"Neutral: {sentiment_results[1]}\n")
+                f.write(f"Positive: {sentiment_results[2]}\n")
 
 def main():
     # Initialize analyzer
