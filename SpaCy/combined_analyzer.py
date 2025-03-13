@@ -287,7 +287,7 @@ class CombinedAnalyzer:
 
         # Save results if path provided
         if save_path:
-            self.save_results(save_path, preprocessing_results, classification_results, dependency_results)
+            self.save_results(save_path, preprocessing_results, classification_results, dependency_results, sentiment_results)
             
         return preprocessing_results, classification_results, dependency_results, sentiment_results
 
@@ -327,13 +327,13 @@ class CombinedAnalyzer:
 
         # Update the sentiment score
         # Apply positive adjustments
-        sentiment_score[2] = min(1.0, max(0.0, sentiment_score[2] + adjustment)) #to ensure the score is between 0 and 1
+        sentiment_score[2] = min(1.0, max(0.0, sentiment_score[2] + tune_score)) #to ensure the score is between 0 and 1
         # Apply negative adjustments
-        sentiment_score[0] = min(1.0, max(0.0, sentiment_score[0] - adjustment)) 
+        sentiment_score[0] = min(1.0, max(0.0, sentiment_score[0] - tune_score)) 
         
         return sentiment_score
 
-    def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None):
+    def save_results(self, output_file, preprocessing_results, classification_results=None, dependency_results=None, sentiment_results=None):
         """Save analysis results to a file"""
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write("Comprehensive Text Analysis Results\n")
@@ -360,6 +360,13 @@ class CombinedAnalyzer:
                 for dep in dependency_results:
                     f.write(f"{dep['token']} -> {dep['head']} ({dep['dependency']}) [POS: {dep['pos']}]\n")
 
+            if sentiment_results:
+                f.write("\nSentiment Analysis Results:\n")
+                f.write("-" * 20 + "\n")
+                f.write(f"Negative: {sentiment_results[0]}\n")
+                f.write(f"Neutral: {sentiment_results[1]}\n")
+                f.write(f"Positive: {sentiment_results[2]}\n")
+
 def main():
     # Initialize analyzer
     analyzer = CombinedAnalyzer()
@@ -375,7 +382,7 @@ def main():
     text_data = analyzer.load_data('input.txt', is_json=False)
     if text_data:
         # Perform analysis and save results
-        preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(
+        preprocessing_results, classification_results, dependency_results, sentiment_results = analyzer.analyze_text(
             text_data, 
             save_path='combined_analysis_results.txt'
         )
