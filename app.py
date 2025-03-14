@@ -37,7 +37,7 @@ def load_and_train():
                 
                 # Train the classifier with improved parameters
                 analyzer.train_classifier(
-                    training_examples,
+                    training_data=training_examples,
                     n_iter=30,
                     dropout=0.2,
                     batch_size=8
