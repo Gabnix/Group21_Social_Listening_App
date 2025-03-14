@@ -32,10 +32,9 @@ class CombinedAnalyzer:
         self.roberta_tokenizer = RobertaTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment") 
         self.roberta_model = RobertaForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
 
-        #Add predefined keyword to inprove sentiment accuracy
-        self.positive_keywords = {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15}
-        self.negative_keywords = {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}  
-        
+        # Load sentiment keywords from JSON file
+        self.positive_keywords, self.negative_keywords = self.load_sentiment_keywords()
+
         # Configure attribute ruler patterns
         ruler = self.nlp.get_pipe("attribute_ruler")
         patterns = [
@@ -126,6 +125,42 @@ class CombinedAnalyzer:
         except Exception as e:
             print(f"Error loading training data: {e}")
             self.categories_data = {}
+
+    def load_sentiment_keywords(self):
+        """Load sentiment keywords from JSON file using `with open`"""
+        keywords_file = "preprocessing/roberta_sentiment_keywords.json"
+        try:
+            with open(keywords_file, 'r', encoding='utf-8') as file:
+                keywords_data = json.load(file)
+                if not keywords_data:  # Handle empty file
+                    print(f"Error: File {keywords_file} is empty.")
+                    return (
+                        {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                        {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+                    )
+                return (
+                    keywords_data.get("positive_keywords", {}),
+                    keywords_data.get("negative_keywords", {})
+                )
+        except FileNotFoundError:
+            print(f"Error: File {keywords_file} not found.")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+        except json.JSONDecodeError:
+            print(f"Error: File {keywords_file} is not in valid JSON format.")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+        except Exception as e:
+            print(f"Error loading sentiment keywords: {str(e)}")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+
 
     def preprocess_text(self, text):
         """Preprocess text with agricultural domain focus"""
