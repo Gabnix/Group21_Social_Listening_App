@@ -7,6 +7,7 @@ import random
 from spacy.matcher import Matcher
 import numpy as np
 from pathlib import Path
+import spacy.util
 
 class CombinedAnalyzer:
     def __init__(self):
@@ -151,102 +152,68 @@ class CombinedAnalyzer:
                 train_data.append((text, {"cats": cats}))
         return train_data
 
-    def train_classifier(self, n_iter=50):
+    def train_classifier(self, training_data=None, n_iter=50, dropout=0.1, batch_size=4):
         """Train text classifier with agricultural focus"""
-        # Prepare training data
-        train_texts = []
-        train_labels = []
+        # Remove existing textcat if present
+        if "textcat" in self.nlp.pipe_names:
+            self.nlp.remove_pipe("textcat")
+            
+        # Add new textcat with default configuration
+        textcat = self.nlp.add_pipe("textcat", last=True)
         
-        for category, examples in self.categories_data.items():
-            for example in examples:
-                train_texts.append(example)
-                train_labels.append(category)
+        # Prepare training data
+        train_examples = []
+        if training_data is None:
+            # Use categories_data if no training data provided
+            all_categories = list(self.categories_data.keys())
+            for category, texts in self.categories_data.items():
+                for text in texts:
+                    doc = self.nlp.make_doc(text)
+                    cats = {cat: 1.0 if cat == category else 0.0 for cat in all_categories}
+                    example = {"text": doc, "cats": cats}
+                    train_examples.append(example)
+        else:
+            # Use provided training data
+            all_categories = set()
+            for text, cats in training_data:
+                all_categories.update(cats["cats"].keys())
+            
+            for text, cats_dict in training_data:
+                doc = self.nlp.make_doc(text)
+                cats = {cat: cats_dict["cats"].get(cat, 0.0) for cat in all_categories}
+                example = {"text": doc, "cats": cats}
+                train_examples.append(example)
+        
+        # Add labels to textcat
+        for category in all_categories:
+            textcat.add_label(category)
         
         # Split into training and validation sets
-        indices = list(range(len(train_texts)))
-        random.shuffle(indices)
-        split = int(0.8 * len(indices))
+        random.shuffle(train_examples)
+        split = int(len(train_examples) * 0.8)
+        train_data = train_examples[:split]
+        dev_data = train_examples[split:]
         
-        train_indices = indices[:split]
-        val_indices = indices[split:]
-        
-        # Training configuration
-        config = {
-            "batch_size": 4,
-            "dropout": 0.1,
-            "learning_rate": 0.001,
-            "patience": 10,
-            "min_loss_improvement": 0.001
-        }
-        
-        # Initialize text classifier
-        textcat = self.nlp.add_pipe("textcat", config={"exclusive_classes": True})
-        
-        # Add labels
-        for label in set(train_labels):
-            textcat.add_label(label)
+        # Initialize the model
+        optimizer = self.nlp.initialize()
         
         # Training loop
-        print("Training agricultural text classifier...")
-        best_loss = float('inf')
-        patience_counter = 0
-        best_weights = None
-        
-        # Disable other pipeline components during training
-        other_pipes = [pipe for pipe in self.nlp.pipe_names if pipe != "textcat"]
-        with self.nlp.disable_pipes(*other_pipes):
+        print(f"Training textcat model with {len(train_data)} examples...")
+        with self.nlp.select_pipes(enable=["textcat"]):
             for i in range(n_iter):
+                random.shuffle(train_data)
                 losses = {}
-                random.shuffle(train_indices)
                 
-                # Training batch
-                for batch_start in tqdm(range(0, len(train_indices), config["batch_size"])):
-                    batch_end = min(batch_start + config["batch_size"], len(train_indices))
-                    batch_indices = train_indices[batch_start:batch_end]
-                    
-                    batch_texts = [train_texts[i] for i in batch_indices]
-                    batch_labels = [train_labels[i] for i in batch_indices]
-                    
-                    docs = [self.nlp.make_doc(text) for text in batch_texts]
+                # Batch training
+                batches = spacy.util.minibatch(train_data, size=batch_size)
+                for batch in batches:
                     examples = []
-                    for j, doc in enumerate(docs):
-                        label = batch_labels[j]
-                        cats = {l: (l == label) for l in textcat.labels}
-                        examples.append(Example.from_dict(doc, {"cats": cats}))
-                    
-                    self.nlp.update(examples, drop=config["dropout"], losses=losses)
-                
-                # Validation
-                val_losses = []
-                for val_index in val_indices:
-                    val_text = train_texts[val_index]
-                    val_label = train_labels[val_index]
-                    
-                    doc = self.nlp.make_doc(val_text)
-                    cats = {l: (l == val_label) for l in textcat.labels}
-                    example = Example.from_dict(doc, {"cats": cats})
-                    val_losses.append(textcat.get_loss(example))
-                
-                val_loss = np.mean(val_losses)
-                
-                # Early stopping check
-                if val_loss < best_loss - config["min_loss_improvement"]:
-                    best_loss = val_loss
-                    patience_counter = 0
-                    best_weights = textcat.model.copy()
-                else:
-                    patience_counter += 1
-                
-                if patience_counter >= config["patience"]:
-                    print(f"Early stopping at iteration {i+1}")
-                    break
+                    for eg in batch:
+                        examples.append(Example.from_dict(eg["text"], {"cats": eg["cats"]}))
+                    self.nlp.update(examples, sgd=optimizer, drop=dropout, losses=losses)
                 
                 if (i + 1) % 10 == 0:
-                    print(f"Iteration {i+1}: Train Loss: {losses['textcat']:.3f}, Val Loss: {val_loss:.3f}")
-        
-        # Restore best weights
-        if best_weights is not None:
-            textcat.model = best_weights
+                    print(f"Iteration {i + 1}: Losses", losses)
         
         print("Training completed!")
 
