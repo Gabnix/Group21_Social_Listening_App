@@ -34,8 +34,6 @@ ENV/
 .vs/
 
 # Project specific
-preprocessing/*.txt
-preprocessing/*.csv
 preprocessing/*.old
 preprocessing/classifcation
 preprocessing/CSV_to_json
@@ -44,16 +42,6 @@ preprocessing/entityDetection
 preprocessing/customLanguageModel
 preprocessing/main
 preprocessing/preprocessing
-preprocessing/text_processor.py
-preprocessing/text_analyzer.py
-preprocessing/dependencyParsing.py
-preprocessing/input.txt
-preprocessing/input.csv
-preprocessing/input categories.csv
-preprocessing/output.json
-preprocessing/processed_results.txt
-preprocessing/processed_tokens.txt
-preprocessing/combined_analyzer.py.old
 
 # Test files
 .pytest_cache/
