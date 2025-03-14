@@ -1,3 +1,6 @@
 flask>=2.0.1
 spacy>=3.0.0
 werkzeug>=2.0.0 
+torch>=1.10.0 # PyTorch for RoBERTa
+transformers>=4.12.0  # Hugging Face Transformers for RoBERTa
+# datasets>=2.0.0 # Hugging Face Datasets for RoBERTa Fine-tuning

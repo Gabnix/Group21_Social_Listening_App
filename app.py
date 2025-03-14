@@ -93,7 +93,7 @@ def analyze_text():
     text = data['text']
     
     # Use CombinedAnalyzer to process the text
-    preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
+    preprocessing_results, classification_results, dependency_results, sentiment_result = analyzer.analyze_text(text)
     
     # Create the response with the correct structure
     result = {
@@ -102,7 +102,8 @@ def analyze_text():
             "agricultural_terms": preprocessing_results["agricultural_terms"]
         },
         "classification": classification_results,
-        "dependencies": dependency_results
+        "dependencies": dependency_results,
+        "sentiment score": sentiment_result
     }
     
     return jsonify(result)
