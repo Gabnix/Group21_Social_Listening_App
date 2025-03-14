@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -23,13 +24,50 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
-env/
+.env/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+.vs/
+
+# Project specific
+preprocessing/*.txt
+preprocessing/*.csv
+preprocessing/*.old
+preprocessing/classifcation
+preprocessing/CSV_to_json
+preprocessing/catrgorization
+preprocessing/entityDetection
+preprocessing/customLanguageModel
+preprocessing/main
+preprocessing/preprocessing
+preprocessing/text_processor.py
+preprocessing/text_analyzer.py
+preprocessing/dependencyParsing.py
+preprocessing/input.txt
+preprocessing/input.csv
+preprocessing/input categories.csv
+preprocessing/output.json
+preprocessing/processed_results.txt
+preprocessing/processed_tokens.txt
+preprocessing/combined_analyzer.py.old
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
 # Misc
 .DS_Store
