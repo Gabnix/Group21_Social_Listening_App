@@ -92,20 +92,23 @@ def analyze_text():
     
     text = data['text']
     
-    # Use CombinedAnalyzer to process the text
-    preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
-    
-    # Create the response with the correct structure
-    result = {
-        "preprocessing": {
-            "processed_text": preprocessing_results["processed_text"],
-            "agricultural_terms": preprocessing_results["agricultural_terms"]
-        },
-        "classification": classification_results,
-        "dependencies": dependency_results
-    }
-    
-    return jsonify(result)
+    try:
+        # Use CombinedAnalyzer to process the text
+        preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
+        
+        # Create the response with the correct structure and handle None values
+        result = {
+            "preprocessing": {
+                "processed_text": preprocessing_results.get("processed_text", ""),
+                "agricultural_terms": preprocessing_results.get("agricultural_terms", [])
+            },
+            "classification": classification_results if classification_results is not None else {"error": "Classification not available"},
+            "dependencies": dependency_results if dependency_results is not None else []
+        }
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
 
 @app.route('/preprocess', methods=['POST'])
 def preprocess_text():

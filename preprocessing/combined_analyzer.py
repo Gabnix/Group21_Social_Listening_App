@@ -219,23 +219,42 @@ class CombinedAnalyzer:
 
     def classify_text(self, text):
         """Classify text with confidence scores"""
-        # Preprocess text
-        processed = self.preprocess_text(text)
-        doc = processed["doc"]
-        
-        # Get classification scores
-        scores = doc.cats
-        
-        # Enhance results with agricultural terms
-        result = {
-            "classification": {
-                "category": max(scores.items(), key=lambda x: x[1])[0],
-                "scores": scores
-            },
-            "agricultural_terms": processed["agricultural_terms"]
-        }
-        
-        return result
+        try:
+            # Preprocess text
+            processed = self.preprocess_text(text)
+            doc = processed["doc"]
+            
+            # Get classification scores
+            if "textcat" not in self.nlp.pipe_names:
+                return {
+                    "classification": {
+                        "category": "unknown",
+                        "scores": {}
+                    },
+                    "agricultural_terms": processed["agricultural_terms"]
+                }
+            
+            scores = doc.cats
+            
+            # Enhance results with agricultural terms
+            result = {
+                "classification": {
+                    "category": max(scores.items(), key=lambda x: x[1])[0] if scores else "unknown",
+                    "scores": scores
+                },
+                "agricultural_terms": processed["agricultural_terms"]
+            }
+            
+            return result
+        except Exception as e:
+            print(f"Classification failed: {str(e)}")
+            return {
+                "classification": {
+                    "category": "unknown",
+                    "scores": {}
+                },
+                "agricultural_terms": []
+            }
 
     def analyze_dependencies(self, text):
         """Analyze syntactic dependencies with agricultural focus"""
@@ -262,30 +281,45 @@ class CombinedAnalyzer:
 
     def analyze_text(self, text, save_path=None):
         """Perform comprehensive text analysis: preprocessing, classification, and dependency parsing"""
-        # Preprocess text
-        preprocessing_results = self.preprocess_text(text)
-        
-        # Classify text if textcat is in pipeline
-        classification_results = None
-        if "textcat" in self.nlp.pipe_names:
-            classification_results = self.classify_text(preprocessing_results['processed_text'])
-        
-        # Analyze dependencies
-        dependency_results = self.analyze_dependencies(text)
-        
-        # Save results if path provided
-        if save_path:
-            self.save_results(text, classification_results, dependency_results, save_path)
+        try:
+            # Preprocess text
+            preprocessing_results = self.preprocess_text(text)
             
-        return preprocessing_results, classification_results, dependency_results
+            # Classify text if textcat is in pipeline
+            classification_results = None
+            if "textcat" in self.nlp.pipe_names:
+                try:
+                    classification_results = self.classify_text(preprocessing_results['processed_text'])
+                except Exception as e:
+                    print(f"Classification failed: {str(e)}")
+                    classification_results = None
+            
+            # Analyze dependencies
+            try:
+                dependency_results = self.analyze_dependencies(text)
+            except Exception as e:
+                print(f"Dependency analysis failed: {str(e)}")
+                dependency_results = []
+            
+            # Save results if path provided
+            if save_path:
+                try:
+                    self.save_results(text, classification_results, dependency_results, save_path)
+                except Exception as e:
+                    print(f"Failed to save results: {str(e)}")
+            
+            return preprocessing_results, classification_results, dependency_results
+        except Exception as e:
+            print(f"Text analysis failed: {str(e)}")
+            return {}, None, []
 
     def save_results(self, text, classification_results, dependency_results, output_file="analysis_results.json"):
         """Save analysis results to file"""
         output = {
             "input_text": text,
-            "classification": classification_results["classification"],
-            "agricultural_terms": classification_results["agricultural_terms"],
-            "dependencies": dependency_results
+            "classification": classification_results["classification"] if classification_results else None,
+            "agricultural_terms": classification_results["agricultural_terms"] if classification_results else [],
+            "dependencies": dependency_results if dependency_results else []
         }
         
         with open(output_file, "w") as f:
