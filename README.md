@@ -35,7 +35,7 @@ python -m spacy download en_core_web_sm
 
 5. Run the application:
 ```bash
-python app.py
+python flask_server.py
 ```
 
 The API will be available at `http://localhost:5000`
