@@ -94,7 +94,7 @@ def analyze_text():
     
     try:
         # Use CombinedAnalyzer to process the text
-        preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(text)
+        preprocessing_results, classification_results, dependency_results, sentiment_result = analyzer.analyze_text(text)
         
         # Create the response with the correct structure and handle None values
         result = {
@@ -103,7 +103,8 @@ def analyze_text():
                 "agricultural_terms": preprocessing_results.get("agricultural_terms", [])
             },
             "classification": classification_results if classification_results is not None else {"error": "Classification not available"},
-            "dependencies": dependency_results if dependency_results is not None else []
+            "dependencies": dependency_results if dependency_results is not None else [],
+            "sentiment_score": sentiment_result if sentiment_result is not None else {"error": "Sentiment analysis not available"}
         }
         
         return jsonify(result)

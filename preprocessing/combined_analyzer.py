@@ -9,6 +9,10 @@ import numpy as np
 from pathlib import Path
 import spacy.util
 
+#For RoBERTa integration
+import torch
+from transformers import RobertaTokenizer, RobertaForSequenceClassification
+
 class CombinedAnalyzer:
     def __init__(self):
         """Initialize the CombinedAnalyzer with required models and components"""
@@ -22,7 +26,15 @@ class CombinedAnalyzer:
         
         if "attribute_ruler" not in self.nlp.pipe_names:
             self.nlp.add_pipe("attribute_ruler", after="tagger")
-            
+        
+        #Initialise RoBERTa model
+        #Pretrained RoBERTa model for Sentiment Analysis 
+        self.roberta_tokenizer = RobertaTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment") 
+        self.roberta_model = RobertaForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+
+        # Load sentiment keywords from JSON file
+        self.positive_keywords, self.negative_keywords = self.load_sentiment_keywords()
+
         # Configure attribute ruler patterns
         ruler = self.nlp.get_pipe("attribute_ruler")
         patterns = [
@@ -113,6 +125,42 @@ class CombinedAnalyzer:
         except Exception as e:
             print(f"Error loading training data: {e}")
             self.categories_data = {}
+
+    def load_sentiment_keywords(self):
+        """Load sentiment keywords from JSON file using `with open`"""
+        keywords_file = "preprocessing/roberta_sentiment_keywords.json"
+        try:
+            with open(keywords_file, 'r', encoding='utf-8') as file:
+                keywords_data = json.load(file)
+                if not keywords_data:  # Handle empty file
+                    print(f"Error: File {keywords_file} is empty.")
+                    return (
+                        {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                        {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+                    )
+                return (
+                    keywords_data.get("positive_keywords", {}),
+                    keywords_data.get("negative_keywords", {})
+                )
+        except FileNotFoundError:
+            print(f"Error: File {keywords_file} not found.")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+        except json.JSONDecodeError:
+            print(f"Error: File {keywords_file} is not in valid JSON format.")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+        except Exception as e:
+            print(f"Error loading sentiment keywords: {str(e)}")
+            return (
+                {"healthy": 0.25, "disease-free": 0.2, "thriving":0.15, "robust":0.15, "vigorous": 0.15},
+                {"infected": -0.2, "diseased": -0.2, "unhealthy": -0.15, "sickly": -0.2, "weak": 0.10, "outbreak": -0.3, "pest infestation": -0.3}        
+            )
+
 
     def preprocess_text(self, text):
         """Preprocess text with agricultural domain focus"""
@@ -300,26 +348,94 @@ class CombinedAnalyzer:
             except Exception as e:
                 print(f"Dependency analysis failed: {str(e)}")
                 dependency_results = []
+
+            # RoBERTa Sentiment Analysis
+            try:
+                sentiment_results = self.sentiment_analysis(preprocessing_results['processed_text'])
+            except Exception as e:
+                print(f"Sentiment analysis failed: {str(e)}")
+                sentiment_results = None
             
             # Save results if path provided
             if save_path:
                 try:
-                    self.save_results(text, classification_results, dependency_results, save_path)
+                    self.save_results(text, classification_results, dependency_results, sentiment_results, save_path)
                 except Exception as e:
                     print(f"Failed to save results: {str(e)}")
             
-            return preprocessing_results, classification_results, dependency_results
+            return preprocessing_results, classification_results, dependency_results, sentiment_results
         except Exception as e:
             print(f"Text analysis failed: {str(e)}")
-            return {}, None, []
+            return {}, None, [], None
 
-    def save_results(self, text, classification_results, dependency_results, output_file="analysis_results.json"):
+    def sentiment_analysis(self, text):
+        """"Perform Sentiment Analysis using RoBERTa model"""
+        # Tokenize the text to ensure the size = 512
+        input = self.roberta_tokenizer(text, return_tensors="pt",truncation=True, padding=True)
+        
+        with torch.no_grad():
+            # Perform forward pass
+            output = self.roberta_model(**input)
+
+        # Get the predicted sentiment
+        sentiment = torch.softmax(output.logits, dim=-1)
+        score = sentiment[0].tolist()
+
+        # Get the enhance the sentiment score
+        new_score = self.sentiment_score_refinement(text, score)
+        new_score = [round(score, 3) for score in new_score]
+
+        # Assuming new_score is a list or tuple with three values: [negative_score, neutral_score, positive_score]
+        formatted_score = {
+            "Negative": new_score[0],
+            "Neutral": new_score[1],
+            "Positive": new_score[2]
+        }
+        
+        if new_score[0] > new_score[1] and new_score[0] > new_score[2]:
+            sentiment = "Negative"
+        elif new_score[1] > new_score[0] and new_score[1] > new_score[2]:
+            sentiment = "Neutral"
+        else:
+            sentiment = "Positive"
+
+        # Add the sentiment to the formatted_score
+        formatted_score["Sentiment"] = sentiment
+
+        return formatted_score
+
+    def sentiment_score_refinement(self, text, sentiment_score):
+        """Refine the score using predefined keywords"""
+        tune_score = 0
+        newText = text.lower()
+
+        # Check for positive keywords
+        for keyword, adjustment in self.positive_keywords.items():
+            if keyword in newText:
+                tune_score += adjustment
+
+        # Check for negative keywords
+        for keyword, adjustment in self.negative_keywords.items():
+            if keyword in newText:
+                tune_score -= abs(adjustment)
+
+        # Update the sentiment score
+        # Apply positive adjustments
+        sentiment_score[2] = min(1.0, max(0.0, sentiment_score[2] + tune_score)) #to ensure the score is between 0 and 1
+        # Apply negative adjustments
+        sentiment_score[0] = min(1.0, max(0.0, sentiment_score[0] - tune_score)) 
+        
+        return sentiment_score
+
+
+    def save_results(self, text, classification_results, dependency_results, sentiment_results, output_file="analysis_results.json"):
         """Save analysis results to file"""
         output = {
             "input_text": text,
             "classification": classification_results["classification"] if classification_results else None,
             "agricultural_terms": classification_results["agricultural_terms"] if classification_results else [],
-            "dependencies": dependency_results if dependency_results else []
+            "dependencies": dependency_results if dependency_results else [],
+            "sentiment_score": sentiment_results if sentiment_results else None
         }
         
         with open(output_file, "w") as f:
@@ -342,7 +458,7 @@ def main():
     text_data = analyzer.load_data('input.txt', is_json=False)
     if text_data:
         # Perform analysis and save results
-        preprocessing_results, classification_results, dependency_results = analyzer.analyze_text(
+        preprocessing_results, classification_results, dependency_results, sentiment_results = analyzer.analyze_text(
             text_data, 
             save_path='combined_analysis_results.json'
         )
