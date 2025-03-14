@@ -7,7 +7,7 @@ def run_tests_with_coverage():
     # Start code coverage measurement
     cov = coverage.Coverage(
         branch=True,
-        source=['SpaCy', 'flask_app.py'],
+        source=['preprocessing', 'flask_app.py'],
         omit=['tests/*', 'venv/*']
     )
     cov.start()

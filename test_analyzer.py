@@ -1,4 +1,4 @@
-from SpaCy.combined_analyzer import CombinedAnalyzer
+from preprocessing.combined_analyzer import CombinedAnalyzer
 import json
 
 def test_analyzer():

@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import spacy
 from werkzeug.exceptions import BadRequest
-from preprocessing.combined_analyzer import CombinedAnalyzer
+from SpaCy.combined_analyzer import CombinedAnalyzer
 import json
 import os
 
@@ -12,7 +12,7 @@ analyzer = CombinedAnalyzer()
 
 # Load and train with output.json at startup
 def load_and_train():
-    json_path = os.path.join('preprocessing', 'output.json')
+    json_path = os.path.join('SpaCy', 'output.json')
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)

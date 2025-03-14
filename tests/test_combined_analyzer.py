@@ -1,5 +1,5 @@
 import unittest
-from SpaCy.combined_analyzer import CombinedAnalyzer
+from preprocessing.combined_analyzer import CombinedAnalyzer
 import json
 import os
 
