@@ -42,6 +42,8 @@ preprocessing/entityDetection
 preprocessing/customLanguageModel
 preprocessing/main
 preprocessing/preprocessing
+preprocessing/custom_ner_model/
+preprocessing/.env/
 
 # Test files
 .pytest_cache/
