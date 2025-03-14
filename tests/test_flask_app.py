@@ -6,7 +6,7 @@ import os
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from flask_server import app
+from flask_app import app
 
 class TestFlaskApp(unittest.TestCase):
     def setUp(self):
