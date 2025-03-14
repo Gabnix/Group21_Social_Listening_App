@@ -4,25 +4,26 @@
     "description": "A social listening tool for monitoring public discussions on crop diseases and fungicide resistance management strategies.",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js",
-        "dev": "nodemon index.js",
-        "test": "echo \"No tests specified\" && exit 1"
+        "start": "node server/server.js",
+        "dev": "nodemon server/server.js",
+        "data:collect": "node server/services/dataCollector.js",
+        "scheduler:start": "node server/services/scheduledCollection.js"
     },
     "author": "Michael Timothy Boen",
     "license": "ISC",
     "dependencies": {
-        "auth0": "^2.28.0",
-        "axios": "^1.8.2",
+        "auth0": "^4.19.0",
+        "axios": "^1.8.3",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "mongodb": "^4.5.0",
         "mongoose": "^6.13.8",
         "node-cron": "^3.0.3",
-        "puppeteer": "^19.0.0"
+        "puppeteer": "^24.4.0"
     },
     "devDependencies": {
-        "nodemon": "^2.0.22"
+        "nodemon": "^3.1.9"
     },
     "engines": {
         "node": ">=14.0.0"
@@ -30,15 +31,10 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Gabnix/Group21_Social_Listening_App.git"
-  },
-  "keywords": [],
-  "bugs": {
-    "url": "https://github.com/Gabnix/Group21_Social_Listening_App/issues"
-  },
-  "homepage": "https://github.com/Gabnix/Group21_Social_Listening_App#readme",
-  "scripts": {
-    "start": "node server/server.js",
-    "dev": "nodemon server/server.js",
-    "data:collect": "node server/services/dataCollector.js"
-  }
+    },
+    "keywords": [],
+    "bugs": {
+        "url": "https://github.com/Gabnix/Group21_Social_Listening_App/issues"
+    },
+    "homepage": "https://github.com/Gabnix/Group21_Social_Listening_App#readme"
 }

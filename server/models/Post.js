@@ -1,49 +1,64 @@
+// server/models/Post.js
 const mongoose = require('mongoose');
 
 const PostSchema = new mongoose.Schema({
-  platform: {
+  source: {
     type: String,
     required: true,
-    enum: ['facebook', 'reddit', 'twitter', 'government']
+    enum: ['reddit', 'twitter', 'facebook', 'other'],
+    index: true
   },
-  postId: {
+  source_id: {
     type: String,
     required: true
+  },
+  title: {
+    type: String,
+    index: 'text'
   },
   content: {
     type: String,
-    required: true
+    index: 'text'
   },
-  author: String,
-  timestamp: {
+  author: {
+    type: String,
+    index: true
+  },
+  url: {
+    type: String
+  },
+  created: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  subreddit: {
+    type: String,
+    index: true
+  },
+  metadata: {
+    upvotes: Number,
+    downvotes: Number,
+    score: Number,
+    comments: Number,
+    awards: Number,
+    nsfw: Boolean
+  },
+  sentiment: {
+    type: Number
+  },
+  keywords: [{
+    type: String
+  }],
+  collected_at: {
     type: Date,
     default: Date.now
-  },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true
-    }
-  },
-  keywords: [String],
-  sentiment: {
-    score: Number, // -1 to 1 scale
-    label: {
-      type: String,
-      enum: ['negative', 'neutral', 'positive']
-    }
-  },
-  metadata: mongoose.Schema.Types.Mixed
-}, { timestamps: true });
+  }
+}, {
+  timestamps: true
+});
 
-// Create compound index for platform and postId
-PostSchema.index({ platform: 1, postId: 1 }, { unique: true });
-// Create geospatial index for location queries
-PostSchema.index({ location: '2dsphere' });
+// Compound index to ensure uniqueness
+PostSchema.index({ source: 1, source_id: 1 }, { unique: true });
 
 module.exports = mongoose.model('Post', PostSchema);
